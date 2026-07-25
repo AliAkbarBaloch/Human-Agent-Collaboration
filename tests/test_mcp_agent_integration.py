@@ -6,10 +6,10 @@ from autogen_agentchat.base import TaskResult
 from autogen_agentchat.messages import BaseTextChatMessage
 from autogen_core import CancellationToken, ComponentModel
 from autogen_ext.tools.mcp import StdioServerParams
-from magentic_ui.agents.mcp import McpAgentConfig
-from magentic_ui.magentic_ui_config import MagenticUIConfig, ModelClientConfigs
-from magentic_ui.task_team import RunPaths, get_task_team
-from magentic_ui.tools.mcp import NamedMcpServerParams
+from halo.agents.mcp import McpAgentConfig
+from halo.halo_config import HALOAppConfig, ModelClientConfigs
+from halo.task_team import RunPaths, get_task_team
+from halo.tools.mcp import NamedMcpServerParams
 
 
 MCP_AGENT_NAME = "mcp_agent"
@@ -60,8 +60,8 @@ def _dummy_paths():
 @pytest.mark.npx  # Requires npx available on the system to launch the MCP servers
 @pytest.mark.asyncio
 async def test_mcp_agent_integration(mcp_agent_config: List[McpAgentConfig]):
-    # Create MagenticUIConfig with MCP agent config
-    config = MagenticUIConfig(
+    # Create HALOAppConfig with MCP agent config
+    config = HALOAppConfig(
         mcp_agent_configs=mcp_agent_config,
         cooperative_planning=False,
         autonomous_execution=True,
@@ -71,7 +71,7 @@ async def test_mcp_agent_integration(mcp_agent_config: List[McpAgentConfig]):
         browser_local=True,
     )
 
-    team = await get_task_team(magentic_ui_config=config, paths=_dummy_paths())
+    team = await get_task_team(halo_config=config, paths=_dummy_paths())
     cancellation_token = CancellationToken()
     # Send a test message to the team and get a response
     try:

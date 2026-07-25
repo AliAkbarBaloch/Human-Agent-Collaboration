@@ -1,458 +1,286 @@
-<div align="center">
-<img src="docs/img/magui-readme-logo.svg" alt="Magentic-UI Logo">
+# HALO — Human-Agent Loop Orchestrator
 
+**Human-Agent Collaboration Platform for Supervised Multi-Agent Task Execution**
 
-_Automate your web tasks while you stay in control_
+> Plan together. Execute together. Trust together.
 
-[![image](https://img.shields.io/pypi/v/magentic_ui.svg)](https://pypi.python.org/pypi/magentic_ui)
-[![image](https://img.shields.io/pypi/l/magentic_ui.svg)](https://pypi.python.org/pypi/magentic_ui)
-![Python Versions](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue)
-[![arXiv](https://img.shields.io/badge/arXiv-2507.22358-b31b1b.svg)](https://arxiv.org/abs/2507.22358)
+Based on the architecture of [Magentic-UI](https://github.com/microsoft/magentic-ui) (Mozannar et al., Microsoft Research 2025),
+extended with three novel research contributions — together, the **HALO Adaptive Oversight Framework**:
 
-</div>
-
----
-
-Magentic-UI is a **research prototype** human-centered AI agent that solves complex web and coding tasks that may require monitoring. Unlike other black-box agents, the system reveals its plan before executions, lets you guide its actions, and requests approval for sensitive operations while browsing websites, executing code, and analyzing files.
-*Check out the [demo section](#demos) for inspiration on what tasks you can accomplish.*
-
-## ✨ What's New
-
-Microsoft latest agentic model [Fara-7B](https://www.microsoft.com/en-us/research/blog/fara-7b-an-efficient-agentic-model-for-computer-use/) is now integrated in Magentic-UI, read how to launch in <a href="#fara-7b"> Fara-7B guide</a>
-
-
-- **"Tell me When"**: Automate monitoring tasks and repeatable workflows that require web or API access that span minutes to days. *Learn more [here](https://www.microsoft.com/en-us/research/blog/tell-me-when-building-agents-that-can-wait-monitor-and-act/).*
-- **File Upload Support**: Upload any file through the UI for analysis or modification
-- **MCP Agents**: Extend capabilities with your favorite MCP servers
-- **Easier Installation**: We have uploaded our docker containers to GHCR so you no longer need to build any containers! Installation time now is much quicker.
-
-
-## 🚀 Quick Start
-
-Here's how you can get started with Magentic-UI:
-
-```bash
-# 1. Setup environment
-python3 -m venv .venv
-source .venv/bin/activate
-pip install magentic-ui --upgrade
-
-# 2. Set your API key
-export OPENAI_API_KEY="your-api-key-here"
-
-# 3. Launch Magentic-UI
-magentic-ui --port 8081
-```
-
-Then open <http://localhost:8081> in your browser to interact with Magentic-UI!
-
-> **Prerequisites**: Requires Docker and Python 3.10+. Windows users should use WSL2. See [detailed installation](#️-installation) for more info.
-
-## Alternative Usage Options
-
-**Without Docker** (limited functionality: no code execution):
-```bash
-magentic-ui --run-without-docker --port 8081
-```
-
-**Command Line Interface**:
-```bash
-magentic-cli --work-dir PATH/TO/STORE/DATA
-```
-
-**Custom LLM Clients**:
-```bash
-# Azure
-pip install magentic-ui[azure]
-
-# Ollama (local models)
-pip install magentic-ui[ollama]
-```
-
-You can then pass a config file to the `magentic-ui` command (<a href="#model-client-configuration"> client config</a>) or change the model client inside the UI settings.
-
-For further details on installation please read the   <a href="#️-installation">🛠️ Installation</a> section. For common installation issues and their solutions, please refer to the [troubleshooting document](TROUBLESHOOTING.md). See advanced usage instructions with the command `magentic-ui --help`. 
-
-## Quick Navigation:
-<p align="center">
-  <a href="#demos">🎬 Demos</a> &nbsp;|&nbsp;
-  <a href="#how-it-works">🟪 How it Works</a> &nbsp;|&nbsp;
-  <a href="#installation">🛠️ Installation</a> &nbsp;|&nbsp;
-  <a href="#troubleshooting">⚠️ Troubleshooting</a> &nbsp;|&nbsp; 
-  <a href="#contributing">🤝 Contributing</a> &nbsp;|&nbsp;
-  <a href="#license">📄 License</a>
-</p>
+- **Gap 1 — Adaptive Action Guard**: Classifies each task as research / transactional / destructive (rule-based, optionally fused with an LLM layer) and adjusts the approval policy accordingly — less friction on safe tasks, full scrutiny on risky ones.
+- **Gap 2 — Prompt Injection Visibility Layer (Injection Gateway)**: Real-time detection of prompt injection across every content source an agent reads — web pages, files, code-execution output, and MCP tool results — through one shared gateway, plus **action-hijack screening** that catches an agent's proposed action being redirected by something it previously read. User-controlled allow/block decisions are surfaced in the UI.
+- **Gap 3 — Bayesian Trust Calibration**: A per-user, per-task-type trust score (Beta-distribution model) built from approve/reject/block history, closing the loop by default — trust actually tightens or loosens future approval strictness, persists across sessions, and can never loosen a destructive task below full approval.
 
 ---
 
-## Demos
+## What is HALO?
 
-<table>
-<tr>
-<td width="33%" align="center">
+HALO is a human-in-the-loop web agent system. It coordinates multiple AI sub-agents (browser, coder, file surfer) under a human-supervised orchestrator. Every significant action requires or offers human approval. The user can:
 
-**🍕 Pizza Ordering**  
-*Web automation with human-in-the-loop*
+- **Co-Plan**: Review, edit, or regenerate the execution plan before any step runs.
+- **Co-Task**: Send mid-task corrections that cause the orchestrator to replan.
+- **Approve Actions**: Approve or reject individual agent actions in real time.
+- **Switch Tasks**: Manage multiple concurrent tasks from the sidebar.
+- **Recall Plans**: Load similar past plans from memory to reuse as starting points.
+- **Follow Up**: Ask follow-up questions after seeing the final answer, continuing the same session.
 
-<video src="https://github.com/user-attachments/assets/dc95cf5f-c4b4-4fe0-b708-158ff071e5a9" width="100%" style="max-height: 300px;">
-</video>
+---
 
-</td>
-<td width="33%" align="center">
+## Requirements
 
-**🏠 Airbnb Price Analysis**  
-*MCP agent integration*
+- Python 3.10+
+- Docker Desktop (required for the live browser view and the code execution sandbox — see [Docker images](#docker-images) below)
+- Node.js 18+ (for frontend build)
 
-<video src="https://github.com/user-attachments/assets/c19ed8c2-e06f-43b7-bee3-5e2ffc4c5e02" width="100%" style="max-height: 300px;">
-</video>
-
-</td>
-<td width="33%" align="center">
-
-**⭐ Star Monitoring**  
-*Long-running monitoring task*
-
-<video src="https://github.com/user-attachments/assets/d2a463ca-7a94-4414-932d-a69f30fff63b" width="100%" style="max-height: 300px;">
-</video>
-
-</td>
-</tr>
-</table>
-
-
-
-## How it Works
-<p align="center">
-  <img src="./docs/img/magenticui_running.png" alt="Magentic-UI" height="400">
-</p>
-
-Magentic-UI is especially useful for web tasks that require actions on the web (e.g., filling a form, customizing a food order), deep navigation through websites not indexed by search engines (e.g., filtering flights, finding a link from a personal site) or tasks that need web navigation and code execution (e.g., generate a chart from online data).
-
-What differentiates Magentic-UI from other browser use offerings is its transparent and controllable interface that allows for efficient human-in-the-loop involvement. Magentic-UI is built using [AutoGen](https://github.com/microsoft/autogen) and provides a platform to study human-agent interaction and experiment with web agents. Key features include:
-
-- 🧑‍🤝‍🧑 **Co-Planning**: Collaboratively create and approve step-by-step plans using chat and the plan editor.
-- 🤝 **Co-Tasking**: Interrupt and guide the task execution using the web browser directly or through chat. Magentic-UI can also ask for clarifications and help when needed.
-- 🛡️ **Action Guards**: Sensitive actions are only executed with explicit user approvals.
-- 🧠 **Plan Learning and Retrieval**: Learn from previous runs to improve future task automation and save them in a plan gallery. Automatically or manually retrieve saved plans in future tasks.
-- 🔀 **Parallel Task Execution**: You can run multiple tasks in parallel and session status indicators will let you know when Magentic-UI needs your input or has completed the task.
-
-<div align="center">
-  <a href="https://www.youtube.com/watch?v=wOs-5SR8xOc" target="_blank">
-    <img src="https://img.youtube.com/vi/wOs-5SR8xOc/maxresdefault.jpg" alt="Watch the demo video" width="600"/>
-  </a>
-  <br>
-  ▶️ <em> Click to watch a video and learn more about Magentic-UI </em>
-</div>
-
-
-### Autonomous Evaluation
-
-To evaluate its autonomous capabilities, Magentic-UI has been tested against several benchmarks when running with o4-mini: [GAIA](https://huggingface.co/datasets/gaia-benchmark/GAIA) test set (42.52%), which assesses general AI assistants across reasoning, tool use, and web interaction tasks ; [AssistantBench](https://huggingface.co/AssistantBench) test set (27.60%), focusing on realistic, time-consuming web tasks; [WebVoyager](https://github.com/MinorJerry/WebVoyager) (82.2%), measuring end-to-end web navigation in real-world scenarios; and [WebGames](https://webgames.convergence.ai/) (45.5%), evaluating general-purpose web-browsing agents through interactive challenges.
-To reproduce these experimental results, please see the following [instructions](experiments/eval/README.md).
-
-
-
-If you're interested in reading more checkout our [technical report](https://www.microsoft.com/en-us/research/wp-content/uploads/2025/07/magentic-ui-report.pdf) and [blog post](https://www.microsoft.com/en-us/research/blog/magentic-ui-an-experimental-human-centered-web-agent/).
-
+---
 
 ## Installation
-### Pre-Requisites
-
-**Note**: If you're using Windows, we highly recommend using [WSL2](https://docs.microsoft.com/en-us/windows/wsl/install) (Windows Subsystem for Linux).
-
-1. If running on **Windows** or **Mac** you should use [Docker Desktop](https://www.docker.com/products/docker-desktop/) or if inside WSL2 you can install Docker directly inside WSL [docker in WSL2 guide](https://gist.github.com/dehsilvadeveloper/c3bdf0f4cdcc5c177e2fe9be671820c7). If running on **Linux**, you should use [Docker Engine](https://docs.docker.com/engine/install/). 
-
-If using Docker Desktop, make sure it is set up to use WSL2:
-    - Go to Settings > Resources > WSL Integration
-    - Enable integration with your development distro You can find more detailed instructions about this step [here](https://docs.microsoft.com/en-us/windows/wsl/tutorials/wsl-containers).
-
-
-
-2. During the Installation step, you will need to set up your `OPENAI_API_KEY`. To use other models, review the [Model Client Configuration](#model-client-configuration) section below.
-
-3. You need at least [Python 3.10](https://www.python.org/downloads/) installed.
-
-
-If you are on Windows, we recommend to run Magentic-UI inside [WSL2](https://docs.microsoft.com/en-us/windows/wsl/install) (Windows Subsystem for Linux) for correct Docker and file path compatibility.
-
-
-
-### PyPI Installation
-
-Magentic-UI is available on PyPI. We recommend using a virtual environment to avoid conflicts with other packages.
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install magentic-ui
+# From the HALO/ directory
+pip install -e ".[dev]"
 ```
 
-Alternatively, if you use [`uv`](https://docs.astral.sh/uv/getting-started/installation/) for dependency management, you can install Magentic-UI with:
+---
+
+## Run
 
 ```bash
-uv venv --python=3.12 .venv
-. .venv/bin/activate
-uv pip install magentic-ui
+# Standard mode (requires Docker for browser agent and code execution)
+halo --port 8081                        # `halo-app` is an identical alias
+
+# Without Docker (browser/coder agents disabled, orchestrator only)
+halo --port 8081 --run-without-docker
+
+# With a custom model config (Ollama, Azure, InnKube, etc.)
+halo --port 8081 --config ollama_config.yaml
+
+# FARA-7B web surfer variant (see fara_config.yaml)
+halo --port 8081 --config fara_config.yaml --fara
+
+# CLI mode (no UI, single task)
+halo-cli
 ```
 
+Then open **http://localhost:8081** in your browser.
 
-### Running Magentic-UI
+### Docker images
 
-To run Magentic-UI, make sure that Docker is running, then run the following command:
+On first run (unless `--run-without-docker` is passed), HALO checks for two Docker images and **pulls them
+automatically** if missing — no manual `docker build` needed for a standard run:
+
+- a browser image (Playwright + noVNC, for the live browser view)
+- a Python image (sandboxed code execution for the coder agent)
+
+By default these are pulled from `ghcr.io/microsoft/magentic-ui-browser` and `ghcr.io/microsoft/magentic-ui-python-env`
+(the upstream Magentic-UI images — HALO doesn't yet publish its own). To use a locally built image instead (e.g. after
+editing `docker/halo-browser-docker/` or `docker/halo-python-env/`), set `HALO_BROWSER_IMAGE` / `HALO_PYTHON_IMAGE`
+before launching:
 
 ```bash
-magentic-ui --port 8081
+export HALO_BROWSER_IMAGE=halo-browser-docker:local
+export HALO_PYTHON_IMAGE=halo-python-env:local
+halo --port 8081
 ```
 
->**Note**: Running this command for the first time will pull two docker images required for the Magentic-UI agents. If you encounter problems, you can build them directly with the following command:
-```bash
-cd docker
-sh build-all.sh
-```
+---
 
-If you face issues with Docker, please refer to the [TROUBLESHOOTING.md](TROUBLESHOOTING.md) document.
+## Configuration
 
-Once the server is running, you can access the UI at <http://localhost:8081>.
-
-
-
-### Fara-7B
-
-1) First install magentic-ui with the fara extras:
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install magentic-ui[fara]
-```
-
-2) In a seperate process, serve the Fara-7B model using vLLM:
-
-```bash
-vllm serve "microsoft/Fara-7B" --port 5000 --dtype auto 
-```
-
-3) First create a `fara_config.yaml` file with the following content:
+Copy and adapt `ollama_config.yaml` to point at your LLM provider:
 
 ```yaml
-model_config_local_surfer: &client_surfer
-  provider: OpenAIChatCompletionClient
+orchestrator_client:
+  provider: autogen_ext.models.openai.OpenAIChatCompletionClient
   config:
-    model: "microsoft/Fara-7B"
-    base_url: http://localhost:5000/v1
-    api_key: not-needed
+    model: "your-model"
+    base_url: "https://your-endpoint/v1"
+    api_key: "your-key"
     model_info:
-      vision: true
+      vision: false
       function_calling: true
-      json_output: false
-      family: "unknown" 
-      structured_output: false
-      multiple_system_messages: false
+      json_output: true
+      family: unknown
 
-orchestrator_client: *client_surfer
-coder_client: *client_surfer
-web_surfer_client: *client_surfer
-file_surfer_client: *client_surfer
-action_guard_client: *client_surfer
-model_client: *client_surfer
-```
-Note: if you are hosting vLLM on a different port or host, change the `base_url` accordingly.
-
-
-Then launch Magentic-UI with the fara agent:
-
-```bash
-magentic-ui --fara --port 8081 --config fara_config.yaml 
+adaptive_approval: true            # Gap 1: enable adaptive action guard (default: false)
+hybrid_risk_estimation: true       # Gap 1: fuse rule-based classifier with an LLM layer (default: true)
+hybrid_injection_detection: true   # Gap 2: fuse pattern scanner with a semantic LLM layer, everywhere (default: true)
+enable_trust_feedback: true        # Gap 3: close the trust loop — enforce + persist, not just display (default: true)
 ```
 
-Finally, navigate to <http://localhost:8081> to access the interface!
+These four flags are YAML-only — there is no UI Settings toggle for any of them. Set any to `false` to ablate that
+layer for evaluation (e.g. `hybrid_injection_detection: false` for pattern-only scanning). Restart `halo` after
+changing them. `enable_trust_feedback` already defaults to `true`, so `ollama_config.yaml` doesn't declare it
+explicitly — only add it if you want to turn it *off* for an ablation run.
 
-### Configuration
+### The one UI setting that also has to be right
 
-#### Model Client Configuration
+None of the four flags above matter if the **Action Approval Policy** in the UI is set to `Never require approval`.
+`is_scan_active()` treats `approval_policy == "never"` as a global kill switch for Gap 1 and Gap 2 alike — with it
+set, no task is classified, no content is scanned, and no injection alert can ever fire, regardless of the YAML
+flags. To exercise the adaptive-oversight gaps, open the gear icon → **General** → **Action Approval Policy** and
+pick anything other than "Never require approval":
 
-If you want to use a different OpenAI key, or if you want to configure use with Azure OpenAI or Ollama, you can do so inside the UI by navigating to settings (top right icon) and changing model configuration. Another option is to pass a yaml config file when you start Magentic-UI which will override any settings in the UI:
+| Dropdown label | Underlying value |
+|---|---|
+| Never require approval | `never` — disables Gap 1 + Gap 2 entirely |
+| AI based judgement | `auto-conservative` — the sensible default for testing |
+| Always require approval | `always` |
 
-```bash
-magentic-ui --port 8081 --config config.yaml
-```
+There is a fourth backend value, `auto-permissive`, that does **not** appear in this dropdown — it's not something
+you select, it's something HALO puts itself into: Gap 1 sets it automatically when a task classifies as `research`,
+and Gap 3 can promote a tier into it after enough approval history. Don't go looking for it in Settings.
 
-Where the `config.yaml` should look as follows with an AutoGen model client configuration:
+---
 
-```yaml
-gpt4o_client: &gpt4o_client
-    provider: OpenAIChatCompletionClient
-    config:
-      model: gpt-4o-2024-08-06
-      api_key: null
-      base_url: null
-      max_retries: 5
-
-orchestrator_client: *gpt4o_client
-coder_client: *gpt4o_client
-web_surfer_client: *gpt4o_client
-file_surfer_client: *gpt4o_client
-action_guard_client: *gpt4o_client
-plan_learning_client: *gpt4o_client
-```
-You can change the client for each of the agents using the config file and use AzureOpenAI (`AzureOpenAIChatCompletionClient`), Ollama and other clients.
-
-#### MCP Server Configuration
-
-You can also extend Magentic-UI's capabilities by adding custom "McpAgents" to the multi-agent team. Each McpAgent can have access to one or more MCP Servers. You can specify these agents via the `mcp_agent_configs` parameter in your `config.yaml`.
-
-For example, here's an agent called "airbnb_surfer" that has access to the OpenBnb MCP Server running locally via Stdio.
-
-```yaml
-mcp_agent_configs:
-  - name: airbnb_surfer
-    description: "The airbnb_surfer has direct access to AirBnB."
-    model_client: 
-      provider: OpenAIChatCompletionClient
-      config:
-        model: gpt-4.1-2025-04-14
-      max_retries: 10
-    system_message: |-
-      You are AirBnb Surfer, a helpful digital assistant that can help users acces AirBnB.
-
-      You have access to a suite of tools provided by the AirBnB API. Use those tools to satisfy the users requests.
-    reflect_on_tool_use: false
-    mcp_servers:
-      - server_name: AirBnB
-        server_params:
-          type: StdioServerParams
-          command: npx
-          args:
-            - -y
-            - "@openbnb/mcp-server-airbnb"
-            - --ignore-robots-txt
-```
-
-Under the hood, each `McpAgent` is just a `autogen_agentchat.agents.AssistantAgent` with the set of MCP Servers exposed as an `AggregateMcpWorkbench` which is simply a named collection of `autogen_ext.tools.mcp.McpWorkbench` objects (one per MCP Server).
-
-Currently the supported MCP Server types are `autogen_ext.tools.mcp.StdioServerParams` and `autogen_ext.tools.mcp.SseServerParams`.
-
-### Building Magentic-UI from source
-
-This step is primarily for users seeking to make modifications to the code, are having trouble with the pypi installation or want the latest code before a pypi version release.
-
-#### 1. Make sure the above prerequisites are installed, and that Docker is running.
-
-#### 2. Clone the repository to your local machine:
-
-```bash
-git clone https://github.com/microsoft/magentic-ui.git
-cd magentic-ui
-```
-
-#### 3. Install Magentic-UI's dependencies with uv or your favorite package manager:
-
-```bash
-# install uv through https://docs.astral.sh/uv/getting-started/installation/
-uv venv --python=3.12 .venv
-uv sync --all-extras
-source .venv/bin/activate
-```
-
-#### 4. Build the frontend:
-
-First make sure to install node:
-
-```bash
-# install nvm to install node
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
-nvm install node
-```
-
-Then install the frontend:
+## Frontend Development
 
 ```bash
 cd frontend
-npm install -g gatsby-cli
-npm install --global yarn
-yarn install
-yarn build
+yarn install   # or: npm install
+yarn dev       # hot-reload dev server at localhost:8000
+yarn build     # production build → copied to src/halo/backend/web/ui/
 ```
 
-#### 5. Run Magentic-UI, as usual.
+---
+
+## Architecture
+
+HALO's defining architectural decision is that the Injection Gateway is not a preprocessing step bolted onto one
+edge of the pipeline — it's a mandatory checkpoint every party in the system crosses, in both directions, every
+time, before reaching the trusted agent core. The user's own task text is scanned before the agent reasons over
+it; the agent's proposed action is screened for hijacking before it's allowed to execute; and whatever comes back
+from the outside world (a page, a file, code output, an MCP result) is scanned again before it re-enters the
+agent's context. It's the same pattern as a network firewall placed in front of a trusted service — the agent
+never talks to the user or the outside world directly.
+
+```mermaid
+flowchart TB
+    User(["👤 User"])
+    FW{{"🛡️ Injection Gateway — AI Firewall<br/>inspects every crossing shown below"}}
+    Agent["🤖 Agent / Orchestrator<br/>(trusted core)"]
+    Risk[["⚖️ Risk + Trust Engine<br/>auto-permissive / auto-conservative / always"]]
+    World[("🌐 External World<br/>Web · Sandbox · MCP")]
+
+    User -- "① task text" --> FW
+    FW -- "⑧ verified answer / block" --> User
+
+    FW -- "②⑥ clean task / verified content" --> Agent
+    Agent -- "③⑦ proposed action / draft answer" --> FW
+
+    FW -- "④ scanned action" --> World
+    World -- "⑤ page / file / tool result" --> FW
+
+    FW -. "Ⓐ risk score" .-> Risk
+    Risk -- "Ⓑ approval policy" --> Agent
+    Agent -. "Ⓒ approve / reject feedback" .-> Risk
+```
+
+Reading the round trip in order: **①** the user's task text is scanned before the agent ever sees it. **②** the
+clean task reaches the agent, which reasons and **③** proposes an action, screened for hijacking before **④** it's
+allowed to reach the external world. **⑤** whatever comes back is scanned again before **⑥** it re-enters the
+agent's context. The agent's **⑦** draft answer is itself checked before **⑧** it's released to the user. Running
+alongside that numbered trip, not inside it: **Ⓐ** the gateway's risk classification is handed to the Risk +
+Trust Engine the moment the task clears step ②; **Ⓑ** the engine's resulting policy becomes the standard the
+agent's next action is checked against; **Ⓒ** the user's approve/reject decision on that action feeds back into
+the engine, closing the trust-calibration loop for the next task of the same type.
+
+### Code map
+
+The diagram above is the conceptual shape; this is where each piece actually lives:
+
+```
+Browser ──WebSocket──▶ backend/web/routes/ws.py
+                              │
+                       WebSocketManager (backend/web/managers/connection.py)
+                              │
+                       TeamManager.run_stream()
+                              │
+               ┌──────────────┼──────────────┬─────────────┐
+               ▼              ▼              ▼             ▼
+          HALOWebSurfer    HALOCoder    HALOFileSurfer   McpAgent
+               │               │             │              │
+               └───────────────┴─────────────┴──────────────┘
+                              │
+                        ApprovalGuard ◀── input_func ◀── WebSocket
+                              │
+                  injection_gateway.py (Gap 2 — the "AI Firewall" above)
+              scan_and_gate() + action-hijack screening
+                   — every agent above routes through it
+                              │
+                       task_classifier.py (Gap 1 — Risk half of the Engine)
+                              │
+                     feedback_loop.py (Gap 3 — Trust half of the Engine)
+                     Bayesian trust, closed loop by default
+```
+
+---
+
+## Research Gaps
+
+Every task, with no exceptions, starts with a fresh Gap 1 risk check based only on that task's own words; Gap 3's
+trust score then fine-tunes how strict approvals are *within* whatever category Gap 1 just assigned — it cannot
+skip Gap 1, reclassify a task, or loosen a destructive task no matter how trusted the user is. Gap 2 runs
+independently of both, at every point where an agent reads content it didn't write itself. See `SEMINAR_GAPS.md`
+for the full design writeup, flow diagrams, and manual + automated testing guide.
+
+### Gap 1 — Adaptive Action Guard
+
+**Files:** `src/halo/task_classifier.py` (rule layer), `src/halo/llm_risk_estimator.py` (optional LLM layer)  
+Classifies each incoming task as `research`, `transactional`, or `destructive` — a word-boundary keyword classifier
+by default, conservatively fused with an LLM risk estimate when `hybrid_risk_estimation: true`. The orchestrator
+re-classifies on *every* new task message (not just once) and rewrites `ApprovalGuard.config.approval_policy`
+before execution begins. Result: research tasks get `auto-permissive`; transactional tasks get `auto-conservative`;
+anything destructive is hard-floored to `always` regardless of what the LLM layer or accumulated trust says.
+
+### Gap 2 — Prompt Injection Visibility Layer (Injection Gateway)
+
+**Files:** `src/halo/injection_gateway.py`, `src/halo/injection_scanner.py`, `src/halo/semantic_injection_detector.py`  
+One shared function, `scan_and_gate()`, that every content-ingestion point in HALO routes through: web pages,
+files, code-execution output, MCP tool results, and the user's own task text. A pattern scanner (25 signatures)
+is conservatively fused with an optional semantic/LLM layer (`hybrid_injection_detection: true`). If detected, the
+run pauses and the user sees a banner — **Block Page** / **Continue Anyway** — and the LLM never receives the
+injected content unless the user explicitly allows it.
+
+A second, independent check — **action-hijack screening** (`screen_action_for_hijack()`) — asks a different
+question: not "does this content contain hidden instructions" but "does the agent's *proposed action* look like it
+was redirected by something it previously read." It forces an approval prompt even when the normal risk policy
+would have let the action through silently, and covers every agent (web surfer, coder, file surfer, MCP).
+
+### Gap 3 — Bayesian Trust Calibration
+
+**File:** `src/halo/feedback_loop.py`  
+A per-user, per-task-type Beta-distribution trust score, built from every approve/reject/block decision.
+`enable_trust_feedback: true` (the default) closes the loop: the trust-derived policy is written back into the
+live `ApprovalGuard` — so a task type the user keeps approving needs fewer prompts over time, and one they keep
+rejecting needs more — and persists across sessions via a per-user `TrustProfile` DB row, so it isn't reset every
+run. Rejections cost more trust than approvals earn back (asymmetric weighting), and `destructive` tasks are
+hard-floored to `always` no matter how high trust climbs. Set `enable_trust_feedback: false` to make trust
+display-only, e.g. for ablation studies.
+
+---
+
+## Testing & Evaluation
 
 ```bash
-magentic-ui --port 8081
+poe test                                  # pytest suite, excludes tests needing npx
+python tests/eval_bayesian_convergence.py # standalone: proves + simulates Gap 3 convergence
+python qa_evidence/qa_driver.py           # Playwright: drives the live UI through 17 end-to-end scenarios
+python qa_evidence/ground_truth_eval.py   # Playwright: labeled precision/recall/F1 corpus for Gap 2
 ```
 
-
-#### Running the UI from source
-
-If you are making changes to the source code of the UI, you can run the frontend in development mode so that it will automatically update when you make changes for faster development.
-
-1. Open a separate terminal and change directory to the frontend
+The last two scripts need a running `halo` instance (`approval_policy` set to anything but `never`, see above) and,
+for the injection-page scenarios, a local file server for `test_injection_pages/`:
 
 ```bash
-cd frontend
+python -m http.server 8888 --directory test_injection_pages
 ```
 
-2. Create a `.env.development` file.
+See `SEMINAR_GAPS.md` for the full manual test matrix per gap.
 
-```bash
-cp .env.default .env.development
-```
-
-3. Launch frontend server
-
-```bash
-npm run start
-```
-
-4. Then run the UI:
-
-```bash
-magentic-ui --port 8081
-```
-
-The frontend from source will be available at <http://localhost:8000>, and the compiled frontend will be available at <http://localhost:8081>.
-
-
-
-
-## Troubleshooting
-
-
-If you were unable to get Magentic-UI running, do not worry! The first step is to make sure you have followed the steps outlined above, particularly with the [pre-requisites](#pre-requisites).
-
-For common issues and their solutions, please refer to the [TROUBLESHOOTING.md](TROUBLESHOOTING.md) file in this repository. If you do not see your problem there, please open a `GitHub Issue`. 
-
-## Contributing
-
-This project welcomes contributions and suggestions. For information about contributing to Magentic-UI, please see our [CONTRIBUTING.md](CONTRIBUTING.md) guide, which includes current issues to be resolved and other forms of contributing.
-
-This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information, see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
-
-
-## Citation
-
-Please cite our paper if you use our work in your research:
-
-```
-@article{mozannar2025magentic,
-  title={Magentic-UI: Towards Human-in-the-loop Agentic Systems},
-  author={Mozannar, Hussein and Bansal, Gagan and Tan, Cheng and Fourney, Adam and Dibia, Victor and Chen, Jingya and Gerrits, Jack and Payne, Tyler and Maldaner, Matheus Kunzler and Grunde-McLaughlin, Madeleine and others},
-  journal={arXiv preprint arXiv:2507.22358},
-  year={2025}
-}
-```
+---
 
 ## License
 
-Microsoft, and any contributors, grant you a license to any code in the repository under the [MIT License](https://opensource.org/licenses/MIT). See the [LICENSE](LICENSE) file.
-
-Microsoft, Windows, Microsoft Azure, and/or other Microsoft products and services referenced in the documentation
-may be either trademarks or registered trademarks of Microsoft in the United States and/or other countries.
-The licenses for this project do not grant you rights to use any Microsoft names, logos, or trademarks.
-Microsoft's general trademark guidelines can be found at <http://go.microsoft.com/fwlink/?LinkID=254653>.
-
-Any use of third-party trademarks or logos are subject to those third-party's policies.
-
-Privacy information can be found at <https://go.microsoft.com/fwlink/?LinkId=521839>
-
-Microsoft and any contributors reserve all other rights, whether under their respective copyrights, patents, or trademarks, whether by implication, estoppel, or otherwise.
-
+See [LICENSE](LICENSE). Based on Magentic-UI — Copyright (c) Microsoft Corporation.  
+HALO extensions — Copyright (c) HALO Project.

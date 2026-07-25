@@ -16,8 +16,8 @@ require("dotenv").config({
 const config: GatsbyConfig = {
   pathPrefix: process.env.PREFIX_PATH_VALUE || "",
   siteMetadata: {
-    title: `Magentic-UI`,
-    description: `Human-centered web agent interface`,
+    title: `HALO — Human-Agent Loop Orchestrator`,
+    description: `Human-Agent Collaboration Platform for Supervised Multi-Agent Task Execution`,
     siteUrl: `http://tbd.place`,
   },
   // More easily incorporate content into your pages through automatic TypeScript type generation and better GraphQL IntelliSense.
@@ -31,7 +31,7 @@ const config: GatsbyConfig = {
     {
       resolve: "gatsby-plugin-manifest",
       options: {
-        icon: "src/images/icon.png",
+        icon: "src/assets/logo.svg",
       },
     },
     "gatsby-plugin-mdx",

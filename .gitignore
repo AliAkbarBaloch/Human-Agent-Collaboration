@@ -165,7 +165,7 @@ cython_debug/
 scratch.py
 
 .DS_Store
-.magentic_ui_state.json
+.halo_state.json
 debug
 
 data
@@ -177,16 +177,16 @@ node_modules
 # Autogen Studio
 database.sqlite
 .cache/*
-src/magentic_ui/backend/web/files/user/*
-src/magentic_ui/backend/test
-src/magentic_ui/backend/database/alembic.ini
-src/magentic_ui/backend/database/alembic/*
-src/magentic_ui/backend/web/files/ui/*
+src/halo/backend/web/files/user/*
+src/halo/backend/test
+src/halo/backend/database/alembic.ini
+src/halo/backend/database/alembic/*
+src/halo/backend/web/files/ui/*
 OAI_CONFIG_LIST
 scratch/
-src/magentic_ui/backend/web/workdir/*
-src/magentic_ui/backend/web/ui/*
-src/magentic_ui/backend/web/skills/user/*
+src/halo/backend/web/workdir/*
+src/halo/backend/web/ui/*
+src/halo/backend/web/skills/user/*
 .release.sh
 .nightly.sh
 notebooks/test
@@ -211,3 +211,17 @@ venv.bak/
 # Task centric memory related db and logs
 **/memory_bank/
 **/pagelogs/
+ollama_config.yaml
+
+# Not pushed to external remotes (project-internal / sensitive)
+/CLAUDE.md
+/SEMINAR_GAPS.md
+/images-of-system/
+/qa_evidence/
+/innkube_cert2.pem
+/frontend/innkube_cert.pem
+/frontend/innkube_cert2.pem
+/template.pdf
+/template.tex
+/frontend/.env.development
+/frontend/.env.default

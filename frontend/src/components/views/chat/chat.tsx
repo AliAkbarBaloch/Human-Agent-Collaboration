@@ -28,6 +28,13 @@ import {
 } from "../../types/plan";
 import SampleTasks from "./sampletasks";
 import ProgressBar from "./progressbar";
+import HaloFeaturesPanel from "./HaloFeaturesPanel";
+import {
+  HaloEscalation,
+  HaloFeedbackLoopState,
+  HaloRiskEstimation,
+  HaloInjectionDetection,
+} from "../../types/datamodel";
 
 // Extend RunStatus for sidebar status reporting
 type SidebarRunStatus = BaseRunStatus | "final_answer_awaiting_input";
@@ -104,6 +111,18 @@ export default function ChatView({
   // MCP Server selection state - lifted from ChatInput
   const [selectedMcpServers, setSelectedMcpServers] = React.useState<string[]>([]);
 
+  // HALO Features state (Features 7–9)
+  const [haloClassification, setHaloClassification] = React.useState<{ task_type: string; risk_score?: number; policy: string } | null>(null);
+  const [haloFeedbackLoop, setHaloFeedbackLoop] = React.useState<HaloFeedbackLoopState | null>(null);
+  const [haloInjectionCount, setHaloInjectionCount] = React.useState<number>(0);
+  const [haloInjectionRiskScore, setHaloInjectionRiskScore] = React.useState<number>(0);
+  const [haloInjectionRiskLevel, setHaloInjectionRiskLevel] = React.useState<string>("none");
+  const [haloInjectionMatchedPatterns, setHaloInjectionMatchedPatterns] = React.useState<string[]>([]);
+  const [haloEscalation, setHaloEscalation] = React.useState<HaloEscalation | null>(null);
+  const [haloRiskEstimation, setHaloRiskEstimation] = React.useState<HaloRiskEstimation | null>(null);
+  const [haloInjectionDetection, setHaloInjectionDetection] = React.useState<HaloInjectionDetection | null>(null);
+  const [halosPanelOpen, setHaloPanelOpen] = React.useState(false);
+
 
   // Context and config
   const [activeSocket, setActiveSocket] = React.useState<WebSocket | null>(
@@ -115,6 +134,40 @@ export default function ChatView({
 
   const inputTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const activeSocketRef = React.useRef<WebSocket | null>(null);
+
+  // Ali Akbar Prompt Injection Start — BUG-03 fix
+  // The WebSocket can drop mid-task under load ("Task was stopped: Connection
+  // closed") with no automatic recovery, forcing a manual reload. These refs
+  // track live state so the (possibly stale, async) socket.onclose closure can
+  // decide whether an automatic reconnect is safe: only while the run is still
+  // in progress, only while the user hasn't navigated to a different session,
+  // and only up to a small number of backed-off attempts.
+  const currentRunRef = React.useRef<Run | null>(null);
+  const currentSessionIdRef = React.useRef<number | undefined>(undefined);
+  const reconnectAttemptsRef = React.useRef<Record<string, number>>({});
+  const reconnectTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  const RECONNECT_BACKOFF_MS = [1000, 3000, 7000];
+  const TERMINAL_RUN_STATUSES = React.useMemo(
+    () => new Set(["complete", "error", "stopped"]),
+    []
+  );
+
+  React.useEffect(() => {
+    currentRunRef.current = currentRun;
+  }, [currentRun]);
+
+  React.useEffect(() => {
+    currentSessionIdRef.current = session?.id;
+  }, [session?.id]);
+
+  React.useEffect(() => {
+    return () => {
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
+    };
+  }, []);
+  // Ali Akbar Prompt Injection End
 
   // Add ref for ChatInput component
   const chatInputRef = React.useRef<any>(null);
@@ -187,6 +240,51 @@ export default function ChatView({
         if (latestRun) {
           setCurrentRun(latestRun);
           setNoMessagesYet(latestRun.messages.length === 0);
+
+          // Ali Akbar — restore HALO state from the persisted run data (no WS needed)
+          const hs = (latestRun as any).halo_state;
+          if (hs) {
+            if (hs.task_type || hs.risk_score !== undefined || hs.policy) {
+              setHaloClassification({
+                task_type: hs.task_type ?? "research",
+                risk_score: hs.risk_score ?? 0.15,
+                policy: hs.policy ?? "auto-permissive",
+              });
+            }
+            if (hs.risk_estimation) setHaloRiskEstimation(hs.risk_estimation);
+            if (hs.injection_count !== undefined) setHaloInjectionCount(hs.injection_count);
+            if (hs.injection_risk_score !== undefined) setHaloInjectionRiskScore(hs.injection_risk_score);
+            if (hs.injection_risk_level !== undefined) setHaloInjectionRiskLevel(hs.injection_risk_level);
+            if (hs.injection_matched_patterns) setHaloInjectionMatchedPatterns(hs.injection_matched_patterns);
+            if (hs.injection_detection) setHaloInjectionDetection(hs.injection_detection);
+            if (hs.feedback_alpha || hs.feedback_beta) {
+              // Reconstruct the feedback_loop shape the panel expects
+              const taskTypes = ["research", "transactional", "destructive"] as const;
+              const alpha: Record<string, number> = hs.feedback_alpha ?? {};
+              const beta: Record<string, number> = hs.feedback_beta ?? {};
+              const trust_means: Record<string, number> = {};
+              const uncertainties: Record<string, number> = {};
+              const confidences: Record<string, string> = {};
+              const policies: Record<string, string> = {};
+              for (const t of taskTypes) {
+                const a = alpha[t] ?? (t === "research" ? 8 : t === "transactional" ? 5 : 2);
+                const b = beta[t]  ?? (t === "research" ? 2 : t === "transactional" ? 5 : 8);
+                const mean = a / (a + b);
+                const s = a + b;
+                const variance = (a * b) / (s * s * (s + 1));
+                const uncertainty = Math.sqrt(variance);
+                trust_means[t] = Math.round(mean * 10000) / 10000;
+                uncertainties[t] = Math.round(uncertainty * 10000) / 10000;
+                confidences[t] = uncertainty < 0.08 ? "high" : uncertainty < 0.15 ? "medium" : "low";
+                policies[t] = t === "destructive" ? "always"
+                  : mean >= 0.75 && confidences[t] !== "low" ? "auto-permissive"
+                  : mean >= 0.40 ? "auto-conservative"
+                  : "always";
+              }
+              setHaloFeedbackLoop({ trust_means, uncertainties, confidences, policies, alpha, beta });
+            }
+          }
+          // ---------------------------------------------------------------
 
           if (latestRun.id) {
             setupWebSocket(latestRun.id, false, true);
@@ -381,6 +479,18 @@ export default function ChatView({
                 prompt: input_request_message.prompt,
               } as InputRequest;
               break;
+            case "injection_alert":
+              var injection_alert_message = message as InputRequestMessage;
+              input_request = {
+                input_type: "injection_alert",
+                prompt: injection_alert_message.prompt,
+              } as InputRequest;
+              // Update injection risk state from the same WS message
+              if (message.injection_risk_score !== undefined) setHaloInjectionRiskScore(message.injection_risk_score);
+              if (message.injection_risk_level !== undefined) setHaloInjectionRiskLevel(message.injection_risk_level);
+              if (message.injection_matched_patterns !== undefined) setHaloInjectionMatchedPatterns(message.injection_matched_patterns);
+              if (message.injection_detection !== undefined) setHaloInjectionDetection(message.injection_detection);
+              break;
           }
 
           // reset Updated Plan
@@ -398,6 +508,27 @@ export default function ChatView({
             status: "awaiting_input",
             input_request: input_request,
           };
+        case "halo_classification":
+          setHaloClassification({
+            task_type: message.task_type ?? "research",
+            risk_score: message.risk_score,
+            policy: message.policy ?? "auto-permissive",
+          });
+          if (message.risk_estimation !== undefined) setHaloRiskEstimation(message.risk_estimation);
+          return current;
+
+        case "halo_state_update":
+          if (message.task_classification) setHaloClassification(message.task_classification);
+          if (message.risk_estimation !== undefined) setHaloRiskEstimation(message.risk_estimation);
+          if (message.feedback_loop) setHaloFeedbackLoop(message.feedback_loop);
+          if (message.injection_count !== undefined) setHaloInjectionCount(message.injection_count);
+          if (message.injection_risk_score !== undefined) setHaloInjectionRiskScore(message.injection_risk_score);
+          if (message.injection_risk_level !== undefined) setHaloInjectionRiskLevel(message.injection_risk_level);
+          if (message.injection_matched_patterns !== undefined) setHaloInjectionMatchedPatterns(message.injection_matched_patterns);
+          if (message.injection_detection !== undefined) setHaloInjectionDetection(message.injection_detection);
+          if (message.escalation) setHaloEscalation(message.escalation as HaloEscalation);
+          return current;
+
         case "system":
           // update run status
           return {
@@ -911,10 +1042,52 @@ export default function ChatView({
       }
     };
 
+    // Ali Akbar Prompt Injection Start — BUG-03 fix
+    const sessionIdAtSetup = session.id;
+
+    socket.onopen = () => {
+      reconnectAttemptsRef.current[runId] = 0;
+    };
+
     socket.onclose = () => {
       activeSocketRef.current = null;
       setActiveSocket(null);
+
+      const runStatus = currentRunRef.current?.status;
+      const runIsTerminal = !!runStatus && TERMINAL_RUN_STATUSES.has(runStatus);
+      const stillOnSameSession = currentSessionIdRef.current === sessionIdAtSetup;
+      const isOnline =
+        typeof navigator === "undefined" || navigator.onLine !== false;
+      const attempts = reconnectAttemptsRef.current[runId] || 0;
+
+      if (
+        !runIsTerminal &&
+        stillOnSameSession &&
+        isOnline &&
+        attempts < RECONNECT_BACKOFF_MS.length
+      ) {
+        reconnectAttemptsRef.current[runId] = attempts + 1;
+        const delayMs = RECONNECT_BACKOFF_MS[attempts];
+        reconnectTimeoutRef.current = setTimeout(() => {
+          const status = currentRunRef.current?.status;
+          const stillNeedsReconnect =
+            !activeSocketRef.current &&
+            currentSessionIdRef.current === sessionIdAtSetup &&
+            !!status &&
+            !TERMINAL_RUN_STATUSES.has(status);
+          if (stillNeedsReconnect) {
+            setupWebSocket(runId, true);
+          }
+        }, delayMs);
+      } else if (!runIsTerminal && stillOnSameSession && attempts >= RECONNECT_BACKOFF_MS.length) {
+        handleError(
+          new Error(
+            "Lost connection to HALO and could not reconnect automatically. Please refresh the page to resume."
+          )
+        );
+      }
     };
+    // Ali Akbar Prompt Injection End
 
     socket.onerror = (error) => {
       handleError(error);
@@ -1159,9 +1332,9 @@ export default function ChatView({
   }
 
   return (
-    <div className="text-primary h-[calc(100vh-100px)] bg-primary relative rounded flex-1 scroll w-full">
+    <div className="text-primary h-[calc(100vh-100px)] bg-primary relative rounded flex-1 scroll w-full flex flex-row overflow-hidden">
       {contextHolder}
-      <div className="flex flex-col h-full w-full">
+      <div className="flex flex-col h-full flex-1 min-w-0 overflow-hidden">
         {/* Progress Bar - Sticky at top */}
         <div className="progress-container" style={{ height: "3.5rem" }}>
           <div
@@ -1315,6 +1488,21 @@ export default function ChatView({
           )}
         </div>
       </div>
+      {/* HALO Features Panel — Features 7–9 */}
+      <HaloFeaturesPanel
+        taskClassification={haloClassification}
+        riskEstimation={haloRiskEstimation}
+        feedbackLoop={haloFeedbackLoop}
+        injectionCount={haloInjectionCount}
+        injectionRiskScore={haloInjectionRiskScore}
+        injectionRiskLevel={haloInjectionRiskLevel}
+        injectionMatchedPatterns={haloInjectionMatchedPatterns}
+        injectionDetection={haloInjectionDetection}
+        escalation={haloEscalation}
+        onDismissEscalation={() => setHaloEscalation(null)}
+        isOpen={halosPanelOpen}
+        onToggle={() => setHaloPanelOpen((v) => !v)}
+      />
     </div>
   );
 }

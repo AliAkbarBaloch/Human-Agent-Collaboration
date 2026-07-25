@@ -111,12 +111,101 @@ export interface WebSocketMessage {
     | "completion"
     | "input_request"
     | "error"
-    | "system";
+    | "system"
+    | "halo_classification"
+    | "halo_state_update"
+    | "message_chunk";
   data?: AgentMessageConfig | TaskResult;
   input_type?: InputType;
   status?: RunStatus;
   error?: string;
   timestamp?: string;
+  // HALO Adaptive Oversight Framework — Layer 1 (Hybrid Risk-Aware Supervision)
+  task_type?: string;
+  policy?: string;
+  risk_score?: number;
+  task_classification?: { task_type: string; risk_score?: number; policy: string };
+  risk_estimation?: HaloRiskEstimation;
+  // HALO Adaptive Oversight Framework — Layer 2 (Hybrid Security Transparency)
+  injection_count?: number;
+  injection_risk_score?: number;
+  injection_risk_level?: string;
+  injection_matched_patterns?: string[];
+  injection_detection?: HaloInjectionDetection;
+  // HALO Adaptive Oversight Framework — Layer 3 (Trust Calibration)
+  feedback_loop?: HaloFeedbackLoopState;
+  escalation?: HaloEscalation | null;
+}
+
+// --- HALO Feature Types (Features 7–9) ---
+
+// Gap 3 — Bayesian Trust Adaptation state (one entry per task type)
+export interface HaloFeedbackLoopState {
+  trust_means:   Record<string, number>;
+  uncertainties: Record<string, number>;
+  confidences:   Record<string, string>;
+  policies:      Record<string, string>;
+  alpha:         Record<string, number>;
+  beta:          Record<string, number>;
+}
+
+// Gap 1 — Hybrid Risk Estimation state (rule + LLM + fusion)
+export interface HaloRiskEstimation {
+  // Rule layer
+  rule_task_type: string;
+  rule_risk_score: number;
+  rule_policy: string;
+  rule_reason: string;
+  rule_matched_keywords: string[];
+  // LLM layer
+  llm_task_type: string;
+  llm_risk_score: number;
+  llm_confidence: number;
+  llm_reason: string;
+  llm_possible_harms: string[];
+  llm_recommended_policy: string;
+  llm_available: boolean;
+  // Final (fused)
+  final_task_type: string;
+  final_risk_score: number;
+  final_policy: string;
+  fusion_mode: string;
+}
+
+// Gap 2 — Hybrid Injection Detection state (pattern + semantic + fusion)
+export interface HaloInjectionDetection {
+  // Pattern layer
+  pattern_detected: boolean;
+  pattern_risk_score: number;
+  pattern_risk_level: string;
+  matched_patterns: string[];
+  excerpt: string;
+  // Semantic layer
+  semantic_detected: boolean;
+  semantic_risk_score: number;
+  semantic_confidence: number;
+  semantic_attack_type: string;
+  semantic_evidence: string[];
+  semantic_recommended_action: string;
+  semantic_reason: string;
+  semantic_available: boolean;
+  // Final (fused)
+  final_injection_detected: boolean;
+  final_injection_risk_score: number;
+  final_risk_level: string;
+  final_recommended_action: string;
+  fusion_mode: string;
+  url?: string;
+}
+
+// Policy-change notification (emitted when Bayesian policy transitions)
+export interface HaloEscalation {
+  task_type:   string;
+  old_policy:  string;
+  new_policy:  string;
+  trust_mean?: number;
+  uncertainty?: number;
+  confidence?: string;
 }
 
 export interface InputRequestMessage extends WebSocketMessage {
@@ -138,15 +227,15 @@ export type AgentTypes =
   | "AssistantAgent"
   | "UserProxyAgent"
   | "MultimodalWebSurfer"
-  | "FileSurfer"
-  | "MagenticOneCoderAgent";
+  | "HALOFileSurfer"
+  | "HALOOneCoderAgent";
 
 export type ToolTypes = "PythonFunction";
 
 export type TeamTypes =
   | "RoundRobinGroupChat"
   | "SelectorGroupChat"
-  | "MagenticOneGroupChat";
+  | "HALOOneGroupChat";
 
 export type TerminationTypes =
   | "MaxMessageTermination"
@@ -225,11 +314,11 @@ export interface MultimodalWebSurferAgentConfig extends BaseAgentConfig {
 }
 
 export interface FileSurferAgentConfig extends BaseAgentConfig {
-  agent_type: "FileSurfer";
+  agent_type: "HALOFileSurfer";
 }
 
-export interface MagenticOneCoderAgentConfig extends BaseAgentConfig {
-  agent_type: "MagenticOneCoderAgent";
+export interface HALOOneCoderAgentConfig extends BaseAgentConfig {
+  agent_type: "HALOOneCoderAgent";
 }
 
 export type AgentConfig =
@@ -237,7 +326,7 @@ export type AgentConfig =
   | UserProxyAgentConfig
   | MultimodalWebSurferAgentConfig
   | FileSurferAgentConfig
-  | MagenticOneCoderAgentConfig;
+  | HALOOneCoderAgentConfig;
 
 export interface BaseTerminationConfig extends BaseConfig {
   termination_type: TerminationTypes;
@@ -319,6 +408,13 @@ export interface ApprovalInputRequest extends InputRequest {
   prompt: string;
 }
 
+// Ali Akbar Start (Gap 2 — injection alert input request type)
+export interface InjectionAlertInputRequest extends InputRequest {
+  input_type: "injection_alert";
+  prompt: string;
+}
+// Ali Akbar End (Gap 2)
+
 export type RunStatus =
   | "created"
   | "active" // covers 'streaming'
@@ -332,4 +428,6 @@ export type RunStatus =
   | "resuming"
   | "connected";
 
-export type InputType = "text_input" | "approval";
+// Ali Akbar Start (Gap 2 — added "injection_alert" to InputType union)
+export type InputType = "text_input" | "approval" | "injection_alert";
+// Ali Akbar End (Gap 2)

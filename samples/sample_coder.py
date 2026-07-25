@@ -3,8 +3,8 @@ import argparse
 from autogen_agentchat.ui import Console
 from autogen_ext.models.openai import OpenAIChatCompletionClient
 from autogen_agentchat.conditions import TextMentionTermination
-from magentic_ui.agents import CoderAgent
-from magentic_ui.teams import RoundRobinGroupChat
+from halo.agents import HALOCoderAgent
+from halo.teams import RoundRobinGroupChat
 from autogen_agentchat.agents import UserProxyAgent
 
 
@@ -23,7 +23,7 @@ async def main() -> None:
 
     user_proxy = UserProxyAgent(name="user_proxy")
 
-    coder = CoderAgent(
+    coder = HALOCoderAgent(
         name="coder_agent",
         model_client=model_client,
         work_dir=args.work_dir,

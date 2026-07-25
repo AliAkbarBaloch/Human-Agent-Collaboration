@@ -1,7 +1,7 @@
 import pytest
 from typing import Dict
 
-from magentic_ui.tools.url_status_manager import (
+from halo.tools.url_status_manager import (
     URL_ALLOWED,
     UrlStatusManager,
     UrlStatus,

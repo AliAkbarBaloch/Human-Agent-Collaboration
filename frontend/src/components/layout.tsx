@@ -4,6 +4,7 @@ import { useConfigStore } from "../hooks/store";
 import "antd/dist/reset.css";
 import { ConfigProvider, theme } from "antd";
 import { SessionManager } from "./views/manager";
+import { ErrorBoundary } from "./common/ErrorBoundary";
 
 const classNames = (...classes: (string | undefined | boolean)[]) => {
   return classes.filter(Boolean).join(" ");
@@ -20,7 +21,7 @@ type Props = {
   onTabChange?: (tab: string) => void;
 };
 
-const MagenticUILayout = ({
+const HALOAppLayout = ({
   meta,
   title,
   link,
@@ -80,11 +81,13 @@ const MagenticUILayout = ({
           }}
         >
           <main className="flex-1 p-1 text-primary" style={{ height: "100%" }}>
-            <SessionManager />
+            <ErrorBoundary>
+              <SessionManager />
+            </ErrorBoundary>
           </main>
         </ConfigProvider>
         <div className="text-sm text-primary mt-2 mb-2 text-center">
-          Magentic-UI can make mistakes. Please monitor its work and intervene if
+          HALO can make mistakes. Please monitor its work and intervene if
           necessary.
         </div>
       </div>
@@ -107,4 +110,4 @@ const MagenticUILayout = ({
   return layoutContent;
 };
 
-export default MagenticUILayout;
+export default HALOAppLayout;

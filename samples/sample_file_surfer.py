@@ -3,8 +3,8 @@ import argparse
 from autogen_agentchat.ui import Console
 from autogen_ext.models.openai import OpenAIChatCompletionClient
 from autogen_agentchat.conditions import TextMentionTermination
-from magentic_ui.teams import RoundRobinGroupChat
-from magentic_ui.agents import FileSurfer
+from halo.teams import RoundRobinGroupChat
+from halo.agents import HALOFileSurfer
 from autogen_agentchat.agents import UserProxyAgent
 
 # Configure logging to print to console
@@ -17,7 +17,7 @@ async def main(work_dir: str) -> None:
 
     user_proxy = UserProxyAgent(name="user_proxy")
 
-    file_surfer = FileSurfer(
+    file_surfer = HALOFileSurfer(
         name="file_surfer",
         model_client=model_client,
         work_dir=work_dir,
@@ -38,7 +38,7 @@ async def main(work_dir: str) -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Run FileSurfer with a specified work directory."
+        description="Run HALOFileSurfer with a specified work directory."
     )
     parser.add_argument(
         "--work-dir",

@@ -237,7 +237,7 @@ export const SessionManager: React.FC = () => {
     if (!currentSession) return;
 
     // Only update if it starts with "Default Session - "
-    if (currentSession.name.startsWith("Default Session - ")) {
+    if (currentSession.name?.startsWith("Default Session - ")) {
       try {
         const updated = await sessionAPI.updateSession(
           sessionData.id,

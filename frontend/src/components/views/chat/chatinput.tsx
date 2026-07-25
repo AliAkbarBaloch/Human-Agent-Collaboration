@@ -99,11 +99,14 @@ const ChatInput = React.forwardRef<{ focus: () => void }, ChatInputProps>(
       React.useState(false);
     const [isPlanModalVisible, setIsPlanModalVisible] = React.useState(false);
     const textAreaDefaultHeight = "64px";
+    // Ali Akbar Start (Gap 2 — disable text input while injection alert is pending)
     const isInputDisabled =
       disabled ||
       runStatus === "active" ||
       runStatus === "pausing" ||
-      inputRequest?.input_type === "approval";
+      inputRequest?.input_type === "approval" ||
+      inputRequest?.input_type === "injection_alert";
+    // Ali Akbar End (Gap 2)
     const [mcpServers, setMcpServers] = React.useState<MCPServerInfo[]>([]);
     // Handle textarea auto-resize
     React.useEffect(() => {
@@ -768,7 +771,7 @@ const ChatInput = React.forwardRef<{ focus: () => void }, ChatInputProps>(
                     }}
                     placeholder={
                       runStatus === "awaiting_input"
-                        ? "Type your response here and let Magentic-UI know of any changes in the browser."
+                        ? "Type your response here and let HALO know of any changes in the browser."
                         : enable_upload
                           ? dragOver
                             ? "Drop files here..."

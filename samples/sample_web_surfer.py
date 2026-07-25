@@ -5,12 +5,12 @@ from autogen_agentchat.ui import Console
 from autogen_ext.models.openai import OpenAIChatCompletionClient
 from autogen_agentchat.conditions import TextMentionTermination
 from autogen_agentchat.teams import RoundRobinGroupChat
-from magentic_ui.agents import WebSurfer
+from halo.agents import HALOWebSurfer
 from autogen_agentchat.agents import UserProxyAgent
 import logging
 
 
-from magentic_ui.tools.playwright import (
+from halo.tools.playwright import (
     HeadlessDockerPlaywrightBrowser,
     VncDockerPlaywrightBrowser,
     LocalPlaywrightBrowser,
@@ -19,19 +19,19 @@ from magentic_ui.tools.playwright import (
 
 # Configure logging
 logging.basicConfig(level=logging.WARN)
-logger = logging.getLogger("magentic_ui.tools.docker_browser").setLevel(logging.INFO)
+logger = logging.getLogger("halo.tools.docker_browser").setLevel(logging.INFO)
 
 
 async def main() -> None:
     """
-    Main function to run the WebSurfer agent with a browser.
+    Main function to run the HALOWebSurfer agent with a browser.
 
     Parses command line arguments, starts the browser, initializes agents,
     and runs the conversation.
     """
     parser = argparse.ArgumentParser(
         description="""
-        Run WebSurfer with a Docker-based or local browser, supporting both headless and VNC (noVNC) modes.
+        Run HALOWebSurfer with a Docker-based or local browser, supporting both headless and VNC (noVNC) modes.
         
         - By default, runs with a local Playwright browser.
         - Use --port to specify a port for a Dockerized Playwright browser (headless or with VNC).
@@ -60,7 +60,7 @@ async def main() -> None:
     )
     args = parser.parse_args()
 
-    # Start the browser before initializing WebSurfer
+    # Start the browser before initializing HALOWebSurfer
     if args.port != -1 and args.novnc_port != -1:
         browser = VncDockerPlaywrightBrowser(
             bind_dir=Path("/tmp"),
@@ -80,7 +80,7 @@ async def main() -> None:
 
     user_proxy = UserProxyAgent(name="user_proxy")
 
-    web_surfer = WebSurfer(
+    web_surfer = HALOWebSurfer(
         name="web_surfer",
         model_client=model_client,
         animate_actions=True,
@@ -108,7 +108,7 @@ async def main() -> None:
         stream = team.run_stream(task=user_message)
         await Console(stream)
     finally:
-        # Make sure to close the WebSurfer before stopping the browser
+        # Make sure to close the HALOWebSurfer before stopping the browser
         await web_surfer.close()
 
 

@@ -11,29 +11,29 @@ from autogen_core.models import ChatCompletionClient
 from autogen_core import ComponentModel
 from autogen_agentchat.agents import UserProxyAgent
 
-from magentic_ui.tools.playwright.browser import get_browser_resource_config
-from magentic_ui.utils import get_internal_urls
-from magentic_ui.teams import GroupChat, RoundRobinGroupChat
-from magentic_ui.teams.orchestrator.orchestrator_config import OrchestratorConfig
-from magentic_ui.agents import WebSurfer, CoderAgent, USER_PROXY_DESCRIPTION, FileSurfer
-from magentic_ui.magentic_ui_config import MagenticUIConfig, ModelClientConfigs
-from magentic_ui.types import RunPaths
-from magentic_ui.agents.web_surfer import WebSurferConfig
-from magentic_ui.agents.users import DummyUserProxy, MetadataUserProxy
-from magentic_ui.approval_guard import (
+from halo.tools.playwright.browser import get_browser_resource_config
+from halo.utils import get_internal_urls
+from halo.teams import GroupChat, RoundRobinGroupChat
+from halo.teams.orchestrator.orchestrator_config import OrchestratorConfig
+from halo.agents import HALOWebSurfer, HALOCoderAgent, USER_PROXY_DESCRIPTION, HALOFileSurfer
+from halo.halo_config import HALOAppConfig, ModelClientConfigs
+from halo.types import RunPaths
+from halo.agents.web_surfer import WebSurferConfig
+from halo.agents.users import DummyUserProxy, MetadataUserProxy
+from halo.approval_guard import (
     ApprovalGuard,
     ApprovalGuardContext,
     ApprovalConfig,
     BaseApprovalGuard,
 )
-from magentic_ui.input_func import InputFuncType, make_agentchat_input_func
-from magentic_ui.learning.memory_provider import MemoryControllerProvider
+from halo.input_func import InputFuncType, make_agentchat_input_func
+from halo.learning.memory_provider import MemoryControllerProvider
 
 
 async def azure_agent_example():
     """
     This is a simple example of how to use the AzureAIAgent.
-    You can create any agent in the Azure AI Foundry and add it to the Magentic-UI team.
+    You can create any agent in the Azure AI Foundry and add it to the HALO team.
     """
     credential = DefaultAzureCredential()
 
@@ -63,7 +63,7 @@ async def azure_agent_example():
 
 
 async def get_task_team_with_azure_agent(
-    magentic_ui_config: Optional[MagenticUIConfig] = None,
+    halo_config: Optional[HALOAppConfig] = None,
     input_func: Optional[InputFuncType] = None,
     *,
     paths: RunPaths,
@@ -73,14 +73,14 @@ async def get_task_team_with_azure_agent(
     This sample shows how to add an Azure AI Foundry agent to the team.
 
     Args:
-        magentic_ui_config (MagenticUIConfig, optional): Magentic UI configuration for team. Default: None.
+        halo_config (HALOAppConfig, optional): HALO configuration for team. Default: None.
         paths (RunPaths): Paths for internal and external run directories.
 
     Returns:
         GroupChat | RoundRobinGroupChat: An instance of GroupChat or RoundRobinGroupChat with the specified agents and configuration.
     """
-    if magentic_ui_config is None:
-        magentic_ui_config = MagenticUIConfig()
+    if halo_config is None:
+        halo_config = HALOAppConfig()
 
     def get_model_client(
         model_client_config: Union[ComponentModel, Dict[str, Any], None],
@@ -91,54 +91,54 @@ async def get_task_team_with_azure_agent(
             )
         return ChatCompletionClient.load_component(model_client_config)
 
-    if not magentic_ui_config.inside_docker:
+    if not halo_config.inside_docker:
         assert (
             paths.external_run_dir == paths.internal_run_dir
         ), "External and internal run dirs must be the same in non-docker mode"
 
     model_client_orch = get_model_client(
-        magentic_ui_config.model_client_configs.orchestrator
+        halo_config.model_client_configs.orchestrator
     )
     approval_guard: BaseApprovalGuard | None = None
 
     approval_policy = (
-        magentic_ui_config.approval_policy
-        if magentic_ui_config.approval_policy
+        halo_config.approval_policy
+        if halo_config.approval_policy
         else "never"
     )
 
     websurfer_loop_team: bool = (
-        magentic_ui_config.websurfer_loop if magentic_ui_config else False
+        halo_config.websurfer_loop if halo_config else False
     )
 
-    model_client_coder = get_model_client(magentic_ui_config.model_client_configs.coder)
+    model_client_coder = get_model_client(halo_config.model_client_configs.coder)
     model_client_file_surfer = get_model_client(
-        magentic_ui_config.model_client_configs.file_surfer
+        halo_config.model_client_configs.file_surfer
     )
     browser_resource_config, _novnc_port, _playwright_port = (
         get_browser_resource_config(
             paths.external_run_dir,
-            magentic_ui_config.novnc_port,
-            magentic_ui_config.playwright_port,
-            magentic_ui_config.inside_docker,
-            headless=magentic_ui_config.browser_headless,
-            local=magentic_ui_config.browser_local,
+            halo_config.novnc_port,
+            halo_config.playwright_port,
+            halo_config.inside_docker,
+            headless=halo_config.browser_headless,
+            local=halo_config.browser_local,
         )
     )
 
     orchestrator_config = OrchestratorConfig(
-        cooperative_planning=magentic_ui_config.cooperative_planning,
-        autonomous_execution=magentic_ui_config.autonomous_execution,
-        allowed_websites=magentic_ui_config.allowed_websites,
-        plan=magentic_ui_config.plan,
-        model_context_token_limit=magentic_ui_config.model_context_token_limit,
-        do_bing_search=magentic_ui_config.do_bing_search,
-        retrieve_relevant_plans=magentic_ui_config.retrieve_relevant_plans,
-        memory_controller_key=magentic_ui_config.memory_controller_key,
-        allow_follow_up_input=magentic_ui_config.allow_follow_up_input,
-        final_answer_prompt=magentic_ui_config.final_answer_prompt,
+        cooperative_planning=halo_config.cooperative_planning,
+        autonomous_execution=halo_config.autonomous_execution,
+        allowed_websites=halo_config.allowed_websites,
+        plan=halo_config.plan,
+        model_context_token_limit=halo_config.model_context_token_limit,
+        do_bing_search=halo_config.do_bing_search,
+        retrieve_relevant_plans=halo_config.retrieve_relevant_plans,
+        memory_controller_key=halo_config.memory_controller_key,
+        allow_follow_up_input=halo_config.allow_follow_up_input,
+        final_answer_prompt=halo_config.final_answer_prompt,
     )
-    websurfer_model_client = magentic_ui_config.model_client_configs.web_surfer
+    websurfer_model_client = halo_config.model_client_configs.web_surfer
     if websurfer_model_client is None:
         websurfer_model_client = ModelClientConfigs.get_default_client_config()
     websurfer_config = WebSurferConfig(
@@ -146,12 +146,12 @@ async def get_task_team_with_azure_agent(
         model_client=websurfer_model_client,
         browser=browser_resource_config,
         single_tab_mode=False,
-        max_actions_per_step=magentic_ui_config.max_actions_per_step,
+        max_actions_per_step=halo_config.max_actions_per_step,
         url_statuses={key: "allowed" for key in orchestrator_config.allowed_websites}
         if orchestrator_config.allowed_websites
         else None,
-        url_block_list=get_internal_urls(magentic_ui_config.inside_docker, paths),
-        multiple_tools_per_call=magentic_ui_config.multiple_tools_per_call,
+        url_block_list=get_internal_urls(halo_config.inside_docker, paths),
+        multiple_tools_per_call=halo_config.multiple_tools_per_call,
         downloads_folder=str(paths.internal_run_dir),
         debug_dir=str(paths.internal_run_dir),
         animate_actions=True,
@@ -162,24 +162,24 @@ async def get_task_team_with_azure_agent(
 
     user_proxy: DummyUserProxy | MetadataUserProxy | UserProxyAgent
 
-    if magentic_ui_config.user_proxy_type == "dummy":
+    if halo_config.user_proxy_type == "dummy":
         user_proxy = DummyUserProxy(name="user_proxy")
-    elif magentic_ui_config.user_proxy_type == "metadata":
+    elif halo_config.user_proxy_type == "metadata":
         assert (
-            magentic_ui_config.task is not None
+            halo_config.task is not None
         ), "Task must be provided for metadata user proxy"
         assert (
-            magentic_ui_config.hints is not None
+            halo_config.hints is not None
         ), "Hints must be provided for metadata user proxy"
         assert (
-            magentic_ui_config.answer is not None
+            halo_config.answer is not None
         ), "Answer must be provided for metadata user proxy"
         user_proxy = MetadataUserProxy(
             name="user_proxy",
             description="Metadata User Proxy Agent",
-            task=magentic_ui_config.task,
-            helpful_task_hints=magentic_ui_config.hints,
-            task_answer=magentic_ui_config.answer,
+            task=halo_config.task,
+            helpful_task_hints=halo_config.hints,
+            task_answer=halo_config.answer,
             model_client=model_client_orch,
         )
     else:
@@ -190,9 +190,9 @@ async def get_task_team_with_azure_agent(
             input_func=user_proxy_input_func,
         )
 
-    if magentic_ui_config.user_proxy_type in ["dummy", "metadata"]:
+    if halo_config.user_proxy_type in ["dummy", "metadata"]:
         model_client_action_guard = get_model_client(
-            magentic_ui_config.model_client_configs.action_guard
+            halo_config.model_client_configs.action_guard
         )
 
         # Simple approval function that always returns yes
@@ -209,7 +209,7 @@ async def get_task_team_with_azure_agent(
         )
     elif input_func is not None:
         model_client_action_guard = get_model_client(
-            magentic_ui_config.model_client_configs.action_guard
+            halo_config.model_client_configs.action_guard
         )
         approval_guard = ApprovalGuard(
             input_func=input_func,
@@ -220,7 +220,7 @@ async def get_task_team_with_azure_agent(
             ),
         )
     with ApprovalGuardContext.populate_context(approval_guard):
-        web_surfer = WebSurfer.from_config(websurfer_config)
+        web_surfer = HALOWebSurfer.from_config(websurfer_config)
     if websurfer_loop_team:
         # simplified team of only the web surfer
         team = RoundRobinGroupChat(
@@ -230,21 +230,21 @@ async def get_task_team_with_azure_agent(
         await team.lazy_init()
         return team
 
-    coder_agent = CoderAgent(
+    coder_agent = HALOCoderAgent(
         name="coder_agent",
         model_client=model_client_coder,
         work_dir=paths.internal_run_dir,
         bind_dir=paths.external_run_dir,
-        model_context_token_limit=magentic_ui_config.model_context_token_limit,
+        model_context_token_limit=halo_config.model_context_token_limit,
         approval_guard=approval_guard,
     )
 
-    file_surfer = FileSurfer(
+    file_surfer = HALOFileSurfer(
         name="file_surfer",
         model_client=model_client_file_surfer,
         work_dir=paths.internal_run_dir,
         bind_dir=paths.external_run_dir,
-        model_context_token_limit=magentic_ui_config.model_context_token_limit,
+        model_context_token_limit=halo_config.model_context_token_limit,
         approval_guard=approval_guard,
     )
 
@@ -255,7 +255,7 @@ async def get_task_team_with_azure_agent(
         memory_provider = MemoryControllerProvider(
             internal_workspace_root=paths.internal_root_dir,
             external_workspace_root=paths.external_root_dir,
-            inside_docker=magentic_ui_config.inside_docker,
+            inside_docker=halo_config.inside_docker,
         )
     else:
         memory_provider = None

@@ -200,11 +200,11 @@ const PlanView: React.FC<PlanProps> = ({
 
   const getAgentIcon = (agentName: string | undefined): JSX.Element | null => {
     const lowerCaseName = (agentName || "").toLowerCase();
-    if (lowerCaseName === "coder_agent") return <CoderIcon tooltip="Coder" />;
+    if (lowerCaseName === "coder_agent") return <CoderIcon tooltip="HALOCoder" />;
     if (lowerCaseName === "web_surfer")
-      return <WebSurferIcon tooltip="WebSurfer" />;
+      return <WebSurferIcon tooltip="HALOWebSurfer" />;
     if (lowerCaseName === "file_surfer")
-      return <FileSurferIcon tooltip="FileSurfer" />;
+      return <FileSurferIcon tooltip="HALOFileSurfer" />;
     if (lowerCaseName === "user_proxy") return <UserIcon tooltip="User" />;
     if (lowerCaseName === "no_action_agent")
       return <AgentIcon tooltip="Self-Reflection" />;
@@ -213,9 +213,9 @@ const PlanView: React.FC<PlanProps> = ({
 
   const getAgentName = (agentName: string | undefined): string => {
     const lowerCaseName = (agentName || "").toLowerCase();
-    if (lowerCaseName === "coder_agent") return "Coder";
-    if (lowerCaseName === "web_surfer") return "WebSurfer";
-    if (lowerCaseName === "file_surfer") return "FileSurfer";
+    if (lowerCaseName === "coder_agent") return "HALOCoder";
+    if (lowerCaseName === "web_surfer") return "HALOWebSurfer";
+    if (lowerCaseName === "file_surfer") return "HALOFileSurfer";
     if (lowerCaseName === "user_proxy") return "User";
     if (lowerCaseName === "no_action_agent") return "Self-Reflection";
     return agentName || "Agent";

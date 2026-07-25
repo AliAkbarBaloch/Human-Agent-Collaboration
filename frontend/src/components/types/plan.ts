@@ -55,21 +55,21 @@ export const defaultPlan: IPlan = {
   steps: [
     {
       title: "Initiate Web Search",
-      details: "Ask WebSurfer to perform a web search for relevant information.",
+      details: "Ask HALOWebSurfer to perform a web search for relevant information.",
       enabled: true,
-      agent_name: "WebSurfer",
+      agent_name: "HALOWebSurfer",
     },
     {
       title: "Summarize Key Findings",
-      details: "Request WebSurfer to summarize the top results or key information found.",
+      details: "Request HALOWebSurfer to summarize the top results or key information found.",
       enabled: true,
-      agent_name: "WebSurfer",
+      agent_name: "HALOWebSurfer",
     },
     {
       title: "Validate Information",
       details: "Ensure that the information gathered is from credible sources.",
       enabled: true,
-      agent_name: "WebSurfer",
+      agent_name: "HALOWebSurfer",
     }
   ]
 };

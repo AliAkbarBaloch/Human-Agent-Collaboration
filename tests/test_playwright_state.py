@@ -2,7 +2,7 @@ import pytest
 import pytest_asyncio
 from typing import AsyncGenerator
 from playwright.async_api import Browser, BrowserContext, async_playwright
-from magentic_ui.tools.playwright.playwright_state import (
+from halo.tools.playwright.playwright_state import (
     BrowserState,
     Tab,
     save_browser_state,

@@ -1,25 +1,25 @@
-# Magentic-UI Sample Scripts
+# HALO Sample Scripts
 
-This directory contains sample scripts to help explore Magentic-UI. Each script showcases a different agent or team configuration. See below for a brief explanation of each sample:
+This directory contains sample scripts to help explore HALO. Each script showcases a different agent or team configuration. See below for a brief explanation of each sample:
 
-We will be adding more samples to help you get the most out of magentic-ui.
+We will be adding more samples to help you get the most out of halo-app.
 
 ## 1. `sample_azure_agent.py`
 
 **Description:**
 
-- Demonstrates how to use an Azure AI Foundry agent within the Magentic-UI team.
+- Demonstrates how to use an Azure AI Foundry agent within the HALO team.
 
 **Usage:**
 
 - Configure your Azure credentials and deployment names as needed.
-- Run the script to see the Azure agent respond to a simple message or in the Magentic-UI team.
+- Run the script to see the Azure agent respond to a simple message or in the HALO team.
 
 ## 2. `sample_coder.py`
 
 **Description:**
 
-- Runs the coding agent (`CoderAgent`) in a round-robin manner with the user.
+- Runs the coding agent (`HALOCoderAgent`) in a round-robin manner with the user.
 
 **Usage:**
 
@@ -30,7 +30,7 @@ We will be adding more samples to help you get the most out of magentic-ui.
 
 **Description:**
 
-- Runs the `FileSurfer` agent, which can browse and read files in a directory.
+- Runs the `HALOFileSurfer` agent, which can browse and read files in a directory.
 
 **Usage:**
 
@@ -41,7 +41,7 @@ We will be adding more samples to help you get the most out of magentic-ui.
 
 **Description:**
 
-- Runs the `WebSurfer` agent, which can interact with web pages using a Playwright browser (local or Dockerized).
+- Runs the `HALOWebSurfer` agent, which can interact with web pages using a Playwright browser (local or Dockerized).
 - Supports both headless and VNC (noVNC) browser modes for web automation and browsing tasks.
 
 **Usage:**

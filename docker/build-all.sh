@@ -8,11 +8,11 @@ fi
 
 # Run both build scripts in parallel in their respective directories
 (
-    cd magentic-ui-browser-docker && sh build.sh
+    cd halo-browser-docker && sh build.sh
 ) &
 
 (
-    cd magentic-ui-python-env && sh build.sh
+    cd halo-python-env && sh build.sh
 ) &
 
 wait

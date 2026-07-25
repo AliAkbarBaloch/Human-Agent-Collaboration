@@ -13,7 +13,7 @@ export const MODEL_CLIENT_CONFIGS = {
     label: "Web Surfer",
     defaultValue: DEFAULT_OPENAI,
   },
-  coder: { value: "coder", label: "Coder", defaultValue: DEFAULT_OPENAI },
+  coder: { value: "coder", label: "HALOCoder", defaultValue: DEFAULT_OPENAI },
   file_surfer: {
     value: "file_surfer",
     label: "File Surfer",

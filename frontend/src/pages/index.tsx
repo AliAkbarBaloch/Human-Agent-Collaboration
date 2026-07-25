@@ -1,14 +1,14 @@
 import * as React from "react";
-import MagenticUILayout from "../components/layout";
+import HALOAppLayout from "../components/layout";
 import { graphql } from "gatsby";
 
 // markup
 const IndexPage = ({ data }: any) => {
   return (
-    <MagenticUILayout meta={data.site.siteMetadata} title="Home" link={"/"}>
+    <HALOAppLayout meta={data.site.siteMetadata} title="Home" link={"/"}>
       <main style={{ height: "100%" }} className=" h-full ">
       </main>
-    </MagenticUILayout>
+    </HALOAppLayout>
   );
 };
 

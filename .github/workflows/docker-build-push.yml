@@ -22,12 +22,12 @@ jobs:
     strategy:
       matrix:
         image:
-          - name: magentic-ui-browser
-            context: docker/magentic-ui-browser-docker
-            registry_name: microsoft/magentic-ui-browser
-          - name: magentic-ui-python-env
-            context: docker/magentic-ui-python-env
-            registry_name: microsoft/magentic-ui-python-env
+          - name: halo-browser
+            context: docker/halo-browser-docker
+            registry_name: microsoft/halo-browser
+          - name: halo-python-env
+            context: docker/halo-python-env
+            registry_name: microsoft/halo-python-env
 
     steps:
     - name: Checkout repository

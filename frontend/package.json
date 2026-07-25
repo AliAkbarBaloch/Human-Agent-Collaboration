@@ -1,9 +1,9 @@
 {
-  "name": "Magentic-UI",
+  "name": "halo-app",
   "version": "1.0.0",
   "private": true,
-  "description": "Magentic-UI",
-  "author": "Microsoft",
+  "description": "HALO \u2014 Human-Agent Loop Orchestrator",
+  "author": "HALO Project",
   "keywords": [
     "gatsby"
   ],
@@ -11,7 +11,7 @@
     "develop": "gatsby clean && gatsby develop",
     "dev": "npm run develop",
     "start": "gatsby clean && gatsby develop",
-    "build": "gatsby clean && rm -rf ../src/magentic_ui/backend/web/ui && PREFIX_PATH_VALUE='' gatsby build --prefix-paths && rsync -a --delete public/ ../src/magentic_ui/backend/web/ui/",
+    "build": "gatsby clean && rm -rf ../src/halo/backend/web/ui && PREFIX_PATH_VALUE='' gatsby build --prefix-paths && rsync -a --delete public/ ../src/halo/backend/web/ui/",
     "serve": "gatsby serve",
     "clean": "gatsby clean",
     "typecheck": "tsc --noEmit"
@@ -60,6 +60,8 @@
     "@types/react-dom": "^18.2.19",
     "@types/react-syntax-highlighter": "^15.5.13",
     "@types/uuid": "^10.0.0",
+    "ajv": "^8.20.0",
+    "ajv-keywords": "^5.1.0",
     "typescript": "^5.3.3"
   },
   "resolutions": {

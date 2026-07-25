@@ -63,9 +63,16 @@ const ContentHeader = ({
               </Tooltip>
             )}
           </div>
-          <div className="flex items-center space-x-2">
-            <img src={logo} alt="Magentic-UI Logo" className="h-10 w-10" />
-            <div className="text-primary text-2xl font-bold">Magentic-UI</div>
+          <div className="flex items-center space-x-3">
+            <img src={logo} alt="HALO Logo" className="h-10 w-10" />
+            <div>
+              <div className="text-primary text-2xl font-extrabold tracking-tight leading-none"
+                   style={{color: "var(--color-text-accent)"}}>HALO</div>
+              <div className="text-xs font-medium leading-none mt-0.5"
+                   style={{color: "var(--color-text-secondary)", letterSpacing: "0.04em"}}>
+                Human-Agent Loop Orchestrator
+              </div>
+            </div>
           </div>
         </div>
 
@@ -85,9 +92,10 @@ const ContentHeader = ({
                     alt={user.name}
                   />
                 ) : (
-                  <div className="bg-blue-400 h-8 w-8 rounded-full flex items-center justify-center text-gray-800 font-semibold hover:text-message">
-                    {user.name?.[0]}
-                  </div>
+                  <div className="h-8 w-8 rounded-full flex items-center justify-center font-bold text-sm"
+                     style={{background:"#FFB300", color:"#08122B"}}>
+                  H
+                </div>
                 )}
               </div>
             </Tooltip>

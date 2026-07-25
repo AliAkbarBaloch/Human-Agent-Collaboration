@@ -9,7 +9,7 @@ from playwright.async_api import (
     BrowserContext,
 )
 
-from magentic_ui.tools import PlaywrightController
+from halo.tools import PlaywrightController
 
 FAKE_HTML = """
 <!DOCTYPE html>

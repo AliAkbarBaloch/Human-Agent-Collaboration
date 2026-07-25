@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Magentic-UI</title>
+    <title>HALO</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.4.0/github-markdown-light.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
@@ -73,11 +73,11 @@
 <body>
     <div class="header">
         <div class="header-content">
-            <h1>Magentic-UI</h1>
+            <h1>HALO</h1>
             <span>•</span>
-            <a href="https://github.com/microsoft/magentic-ui">View on GitHub</a>
+            <a href="https://github.com/halo-project/halo">View on GitHub</a>
             <span>•</span>
-            <a href="https://github.com/microsoft/magentic-ui/releases">Releases</a>
+            <a href="https://github.com/halo-project/halo/releases">Releases</a>
         </div>
     </div>
     
@@ -86,7 +86,7 @@
         <div id="content" style="display: none;"></div>
         <div id="error" class="error" style="display: none;">
             <h2>Error loading README</h2>
-            <p>Please visit the <a href="https://github.com/microsoft/magentic-ui">GitHub repository</a> to view the latest content.</p>
+            <p>Please visit the <a href="https://github.com/halo-project/halo">GitHub repository</a> to view the latest content.</p>
         </div>
     </article>
     
@@ -105,7 +105,7 @@
         });
 
         // Fetch and display README content
-        fetch('https://raw.githubusercontent.com/microsoft/magentic-ui/main/README.md')
+        fetch('https://raw.githubusercontent.com/halo-project/halo/main/README.md')
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Failed to fetch README');
@@ -116,9 +116,9 @@
                 // Fix relative image paths to point to GitHub
                 let fixedMarkdown = markdown
                     // Fix Markdown image syntax: ![alt](path)
-                    .replace(/!\[([^\]]*)\]\((?!https?:\/\/)([^)]+)\)/g, '![$1](https://raw.githubusercontent.com/microsoft/magentic-ui/main/$2)')
+                    .replace(/!\[([^\]]*)\]\((?!https?:\/\/)([^)]+)\)/g, '![$1](https://raw.githubusercontent.com/halo-project/halo/main/$2)')
                     // Fix HTML img tags: <img src="path">
-                    .replace(/<img([^>]+)src="(?!https?:\/\/)([^"]+)"/g, '<img$1src="https://raw.githubusercontent.com/microsoft/magentic-ui/main/$2"')
+                    .replace(/<img([^>]+)src="(?!https?:\/\/)([^"]+)"/g, '<img$1src="https://raw.githubusercontent.com/halo-project/halo/main/$2"')
                     // Convert GitHub video URLs to embedded video players
                     .replace(/https:\/\/github\.com\/user-attachments\/assets\/([a-f0-9-]+)/g, 
                         '<video controls width="100%" style="max-width: 800px;"><source src="https://github.com/user-attachments/assets/$1" type="video/mp4">Your browser does not support the video tag.</video>');
