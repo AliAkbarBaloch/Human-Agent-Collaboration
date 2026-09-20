@@ -2,10 +2,65 @@
 
 **Human-Agent Collaboration Platform for Supervised Multi-Agent Task Execution**
 
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)](#requirements)
+[![Node 18+](https://img.shields.io/badge/node-18%2B-brightgreen)](#frontend-development)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Built on AutoGen](https://img.shields.io/badge/built%20on-AutoGen-orange)](https://github.com/microsoft/autogen)
+
 > Plan together. Execute together. Trust together.
 
 Based on the architecture of [Magentic-UI](https://github.com/microsoft/magentic-ui) (Mozannar et al., Microsoft Research 2025),
-extended with three novel research contributions — together, the **HALO Adaptive Oversight Framework**:
+extended with three novel research contributions — together, the **HALO Adaptive Oversight Framework**. Built and
+evaluated as a research seminar project at the University of Passau, Summer Semester 2026; the full write-up,
+including a 7-framework survey and a live 22-scenario evaluation, is in [`Final_Report.pdf`](Final_Report.pdf).
+
+## Results at a glance
+
+| | |
+|---|---|
+| Live evaluation | 22/22 black-box scenarios passed against the running application (web browsing, code execution, file access, MCP, trust feedback) |
+| Injection detection | Precision 1.00, Recall 0.958, F1 0.979 over 48 trials on a labeled ground-truth corpus |
+| Trust convergence | Proven bound $\sigma_n = O(1/\sqrt{n})$; reaches $\sigma < 0.05$ in about 61–69 interactions in practice |
+| Framework survey | 7 multi-agent frameworks rated against a 4-criterion catalogue; none implement risk-proportional approval or content-level injection scanning |
+| Bugs found | 2 real defects surfaced by live testing (FileSurfer prompt ordering, MCP tool-name escaping), both fixed |
+
+## Screenshots
+
+<table>
+<tr>
+<td width="25%"><img src="Results/QA_WebSurfer_ResearchLowRisk.png" width="100%"><br><sub>Gap 1 — low-risk task auto-approved</sub></td>
+<td width="25%"><img src="Results/QA_WebSurfer_DestructiveApprovalRequired.png" width="100%"><br><sub>Gap 1 — destructive task forces approval</sub></td>
+<td width="25%"><img src="Results/QA_WebSurfer_PatternInjectionAlert.png" width="100%"><br><sub>Gap 2 — lexical injection alert</sub></td>
+<td width="25%"><img src="Results/QA_WebSurfer_SemanticInjectionAlert.png" width="100%"><br><sub>Gap 2 — semantic-only injection caught</sub></td>
+</tr>
+<tr>
+<td width="25%"><img src="Results/QA_Trust_PanelDetail.png" width="100%"><br><sub>Gap 3 — Bayesian trust panel</sub></td>
+<td width="25%"><img src="Results/QA_Coder_ExceptionDebugLoopResult.png" width="100%"><br><sub>Coder agent self-correcting after an exception</sub></td>
+<td width="25%"><img src="Results/QA_MCP_SessionResult.png" width="100%"><br><sub>MCP tool call executed end to end</sub></td>
+<td width="25%"><img src="Results/Settings_UI.png" width="100%"><br><sub>Settings panel</sub></td>
+</tr>
+</table>
+
+All 19 evaluation screenshots are in [`Results/`](Results/). The test matrix behind them is in
+[`SEMINAR_GAPS.md`](SEMINAR_GAPS.md) and [`Final_Report.pdf`](Final_Report.pdf).
+
+## Table of Contents
+
+- [What is HALO?](#what-is-halo)
+- [What I Built vs. Upstream Magentic-UI](#what-i-built-vs-upstream-magentic-ui)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Run](#run)
+- [Configuration](#configuration)
+- [Frontend Development](#frontend-development)
+- [Architecture](#architecture)
+- [Research Gaps](#research-gaps)
+- [Testing & Evaluation](#testing--evaluation)
+- [Report & Further Reading](#report--further-reading)
+- [License](#license)
+- [Author](#author)
+
+The three research contributions this fork adds — together, the **HALO Adaptive Oversight Framework**:
 
 - **Gap 1 — Adaptive Action Guard**: Classifies each task as research / transactional / destructive (rule-based, optionally fused with an LLM layer) and adjusts the approval policy accordingly — less friction on safe tasks, full scrutiny on risky ones.
 - **Gap 2 — Prompt Injection Visibility Layer (Injection Gateway)**: Real-time detection of prompt injection across every content source an agent reads — web pages, files, code-execution output, and MCP tool results — through one shared gateway, plus **action-hijack screening** that catches an agent's proposed action being redirected by something it previously read. User-controlled allow/block decisions are surfaced in the UI.
@@ -23,6 +78,25 @@ HALO is a human-in-the-loop web agent system. It coordinates multiple AI sub-age
 - **Switch Tasks**: Manage multiple concurrent tasks from the sidebar.
 - **Recall Plans**: Load similar past plans from memory to reuse as starting points.
 - **Follow Up**: Ask follow-up questions after seeing the final answer, continuing the same session.
+
+---
+
+## What I Built vs. Upstream Magentic-UI
+
+The orchestrator, the web/coder/file-surfer agents, and the WebSocket/UI plumbing are Microsoft's Magentic-UI —
+credited in [LICENSE](LICENSE) and left as-is. Everything under **Gap 1–3** below is original work for this
+project, layered on top without modifying that core:
+
+| Layer | New files | What it does |
+|---|---|---|
+| Gap 1 — Adaptive Action Guard | `task_classifier.py`, `llm_risk_estimator.py` | Classifies every task fresh (research / transactional / destructive) and rewrites the live approval policy before agents act |
+| Gap 2 — Injection Gateway | `injection_gateway.py`, `injection_scanner.py`, `semantic_injection_detector.py` | One shared scan-and-gate function every content source (pages, files, code output, MCP results, task text) routes through, plus action-hijack screening |
+| Gap 3 — Bayesian Trust Calibration | `feedback_loop.py`, `TrustProfile` DB table | Per-user, per-task-type trust score that closes the loop on live enforcement and persists across sessions |
+| Frontend | `HaloFeaturesPanel.tsx` and related components | Live display of risk classification, injection alerts, and trust state |
+| Evaluation | `qa_evidence/`, `test_injection_pages/`, `tests/test_gap*_*.py` | Live QA driver, labeled injection-detection ground truth, and the pytest suites behind the numbers above |
+
+`SEMINAR_GAPS.md` has the full design rationale and file-by-file trace; `Final_Report.pdf` has the survey and
+evaluation this table summarizes.
 
 ---
 
@@ -280,7 +354,21 @@ See `SEMINAR_GAPS.md` for the full manual test matrix per gap.
 
 ---
 
+## Report & Further Reading
+
+- [`Final_Report.pdf`](Final_Report.pdf) — the seminar report: framework survey, HALO's design, and the full live evaluation (9 pages + references).
+- [`SEMINAR_GAPS.md`](SEMINAR_GAPS.md) — the deep-dive design doc: motivation, phased design, flow diagrams, and the manual + automated test guide for each gap.
+- [`Results/`](Results/) — all 19 screenshots from the live evaluation.
+
+---
+
 ## License
 
-See [LICENSE](LICENSE). Based on Magentic-UI — Copyright (c) Microsoft Corporation.  
-HALO extensions — Copyright (c) HALO Project.
+See [LICENSE](LICENSE). Based on Magentic-UI — Copyright (c) Microsoft Corporation.
+HALO extensions — Copyright (c) 2026 Ali Akbar.
+
+---
+
+## Author
+
+**Ali Akbar** — [@AliAkbarBaloch](https://github.com/AliAkbarBaloch)
