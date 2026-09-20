@@ -42,7 +42,7 @@ including a 7-framework survey and a live 22-scenario evaluation, is in [`Final_
 </table>
 
 All 19 evaluation screenshots are in [`Results/`](Results/). The test matrix behind them is in
-[`SEMINAR_GAPS.md`](SEMINAR_GAPS.md) and [`Final_Report.pdf`](Final_Report.pdf).
+[`Final_Report.pdf`](Final_Report.pdf).
 
 ## Table of Contents
 
@@ -93,10 +93,9 @@ project, layered on top without modifying that core:
 | Gap 2 — Injection Gateway | `injection_gateway.py`, `injection_scanner.py`, `semantic_injection_detector.py` | One shared scan-and-gate function every content source (pages, files, code output, MCP results, task text) routes through, plus action-hijack screening |
 | Gap 3 — Bayesian Trust Calibration | `feedback_loop.py`, `TrustProfile` DB table | Per-user, per-task-type trust score that closes the loop on live enforcement and persists across sessions |
 | Frontend | `HaloFeaturesPanel.tsx` and related components | Live display of risk classification, injection alerts, and trust state |
-| Evaluation | `qa_evidence/`, `test_injection_pages/`, `tests/test_gap*_*.py` | Live QA driver, labeled injection-detection ground truth, and the pytest suites behind the numbers above |
+| Evaluation | `test_injection_pages/`, `tests/test_gap*_*.py` | Labeled injection-detection test pages and the pytest suites behind the numbers above |
 
-`SEMINAR_GAPS.md` has the full design rationale and file-by-file trace; `Final_Report.pdf` has the survey and
-evaluation this table summarizes.
+`Final_Report.pdf` has the full design rationale and the survey and evaluation this table summarizes.
 
 ---
 
@@ -295,8 +294,8 @@ Browser ──WebSocket──▶ backend/web/routes/ws.py
 Every task, with no exceptions, starts with a fresh Gap 1 risk check based only on that task's own words; Gap 3's
 trust score then fine-tunes how strict approvals are *within* whatever category Gap 1 just assigned — it cannot
 skip Gap 1, reclassify a task, or loosen a destructive task no matter how trusted the user is. Gap 2 runs
-independently of both, at every point where an agent reads content it didn't write itself. See `SEMINAR_GAPS.md`
-for the full design writeup, flow diagrams, and manual + automated testing guide.
+independently of both, at every point where an agent reads content it didn't write itself. See
+[`Final_Report.pdf`](Final_Report.pdf) for the full design writeup and evaluation.
 
 ### Gap 1 — Adaptive Action Guard
 
@@ -339,25 +338,23 @@ display-only, e.g. for ablation studies.
 ```bash
 poe test                                  # pytest suite, excludes tests needing npx
 python tests/eval_bayesian_convergence.py # standalone: proves + simulates Gap 3 convergence
-python qa_evidence/qa_driver.py           # Playwright: drives the live UI through 17 end-to-end scenarios
-python qa_evidence/ground_truth_eval.py   # Playwright: labeled precision/recall/F1 corpus for Gap 2
 ```
 
-The last two scripts need a running `halo` instance (`approval_policy` set to anything but `never`, see above) and,
-for the injection-page scenarios, a local file server for `test_injection_pages/`:
+The live QA driver and the labeled precision/recall/F1 ground-truth corpus that produced the numbers in
+[Results at a glance](#results-at-a-glance) are internal evaluation scripts, not included in this repo; the
+methodology, full 22-scenario test matrix, and all 19 screenshots they produced are in
+[`Final_Report.pdf`](Final_Report.pdf) and [`Results/`](Results/). For manual injection testing, serve
+`test_injection_pages/` locally (a fresh session, `approval_policy` set to anything but `never`):
 
 ```bash
 python -m http.server 8888 --directory test_injection_pages
 ```
-
-See `SEMINAR_GAPS.md` for the full manual test matrix per gap.
 
 ---
 
 ## Report & Further Reading
 
 - [`Final_Report.pdf`](Final_Report.pdf) — the seminar report: framework survey, HALO's design, and the full live evaluation (9 pages + references).
-- [`SEMINAR_GAPS.md`](SEMINAR_GAPS.md) — the deep-dive design doc: motivation, phased design, flow diagrams, and the manual + automated test guide for each gap.
 - [`Results/`](Results/) — all 19 screenshots from the live evaluation.
 
 ---
