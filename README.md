@@ -14,6 +14,33 @@ extended with three novel research contributions — together, the **HALO Adapti
 evaluated as a research seminar project at the University of Passau, Summer Semester 2026; the full write-up,
 including a 7-framework survey and a live 22-scenario evaluation, is in [`Final_Report.pdf`](Final_Report.pdf).
 
+## Architecture
+
+HALO's defining architectural decision is that the Injection Gateway is not a preprocessing step bolted onto one
+edge of the pipeline — it's a mandatory checkpoint every party in the system crosses, in both directions, every
+time, before reaching the trusted agent core. The user's own task text is scanned before the agent reasons over
+it; the agent's proposed action is screened for hijacking before it's allowed to execute; and whatever comes back
+from the outside world (a page, a file, code output, an MCP result) is scanned again before it re-enters the
+agent's context. It's the same pattern as a network firewall placed in front of a trusted service — the agent
+never talks to the user or the outside world directly.
+
+![HALO adaptive oversight architecture](docs/architecture.svg)
+
+Reading the round trip in order: **①** the user's task text is scanned before the agent ever sees it. **②** the
+clean task reaches the agent, which reasons and **③** proposes an action, screened for hijacking before **④** it's
+allowed to reach the external world. **⑤** whatever comes back is scanned again before **⑥** it re-enters the
+agent's context. The agent's **⑦** draft answer is itself checked before **⑧** it's released to the user. Running
+alongside that numbered trip, not inside it: **Ⓐ** the gateway's risk classification is handed to the Risk +
+Trust Engine the moment the task clears step ②; **Ⓑ** the engine's resulting policy becomes the standard the
+agent's next action is checked against; **Ⓒ** the user's approve/reject decision on that action feeds back into
+the engine, closing the trust-calibration loop for the next task of the same type.
+
+### Code map
+
+The diagram above is the conceptual shape; this is where each piece actually lives:
+
+![HALO code map](docs/code-map.svg)
+
 ## Results at a glance
 
 | | |
@@ -46,6 +73,7 @@ All 19 evaluation screenshots are in [`Results/`](Results/). The test matrix beh
 
 ## Table of Contents
 
+- [Architecture](#architecture)
 - [What is HALO?](#what-is-halo)
 - [What I Built vs. Upstream Magentic-UI](#what-i-built-vs-upstream-magentic-ui)
 - [Requirements](#requirements)
@@ -53,7 +81,6 @@ All 19 evaluation screenshots are in [`Results/`](Results/). The test matrix beh
 - [Run](#run)
 - [Configuration](#configuration)
 - [Frontend Development](#frontend-development)
-- [Architecture](#architecture)
 - [Research Gaps](#research-gaps)
 - [Testing & Evaluation](#testing--evaluation)
 - [Report & Further Reading](#report--further-reading)
@@ -214,35 +241,6 @@ yarn install   # or: npm install
 yarn dev       # hot-reload dev server at localhost:8000
 yarn build     # production build → copied to src/halo/backend/web/ui/
 ```
-
----
-
-## Architecture
-
-HALO's defining architectural decision is that the Injection Gateway is not a preprocessing step bolted onto one
-edge of the pipeline — it's a mandatory checkpoint every party in the system crosses, in both directions, every
-time, before reaching the trusted agent core. The user's own task text is scanned before the agent reasons over
-it; the agent's proposed action is screened for hijacking before it's allowed to execute; and whatever comes back
-from the outside world (a page, a file, code output, an MCP result) is scanned again before it re-enters the
-agent's context. It's the same pattern as a network firewall placed in front of a trusted service — the agent
-never talks to the user or the outside world directly.
-
-![HALO adaptive oversight architecture](docs/architecture.svg)
-
-Reading the round trip in order: **①** the user's task text is scanned before the agent ever sees it. **②** the
-clean task reaches the agent, which reasons and **③** proposes an action, screened for hijacking before **④** it's
-allowed to reach the external world. **⑤** whatever comes back is scanned again before **⑥** it re-enters the
-agent's context. The agent's **⑦** draft answer is itself checked before **⑧** it's released to the user. Running
-alongside that numbered trip, not inside it: **Ⓐ** the gateway's risk classification is handed to the Risk +
-Trust Engine the moment the task clears step ②; **Ⓑ** the engine's resulting policy becomes the standard the
-agent's next action is checked against; **Ⓒ** the user's approve/reject decision on that action feeds back into
-the engine, closing the trust-calibration loop for the next task of the same type.
-
-### Code map
-
-The diagram above is the conceptual shape; this is where each piece actually lives:
-
-![HALO code map](docs/code-map.svg)
 
 ---
 
