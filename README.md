@@ -227,27 +227,7 @@ from the outside world (a page, a file, code output, an MCP result) is scanned a
 agent's context. It's the same pattern as a network firewall placed in front of a trusted service — the agent
 never talks to the user or the outside world directly.
 
-```mermaid
-flowchart TB
-    User(["👤 User"])
-    FW{{"🛡️ Injection Gateway — AI Firewall<br/>inspects every crossing shown below"}}
-    Agent["🤖 Agent / Orchestrator<br/>(trusted core)"]
-    Risk[["⚖️ Risk + Trust Engine<br/>auto-permissive / auto-conservative / always"]]
-    World[("🌐 External World<br/>Web · Sandbox · MCP")]
-
-    User -- "① task text" --> FW
-    FW -- "⑧ verified answer / block" --> User
-
-    FW -- "②⑥ clean task / verified content" --> Agent
-    Agent -- "③⑦ proposed action / draft answer" --> FW
-
-    FW -- "④ scanned action" --> World
-    World -- "⑤ page / file / tool result" --> FW
-
-    FW -. "Ⓐ risk score" .-> Risk
-    Risk -- "Ⓑ approval policy" --> Agent
-    Agent -. "Ⓒ approve / reject feedback" .-> Risk
-```
+![HALO adaptive oversight architecture](docs/architecture.svg)
 
 Reading the round trip in order: **①** the user's task text is scanned before the agent ever sees it. **②** the
 clean task reaches the agent, which reasons and **③** proposes an action, screened for hijacking before **④** it's
@@ -262,30 +242,7 @@ the engine, closing the trust-calibration loop for the next task of the same typ
 
 The diagram above is the conceptual shape; this is where each piece actually lives:
 
-```
-Browser ──WebSocket──▶ backend/web/routes/ws.py
-                              │
-                       WebSocketManager (backend/web/managers/connection.py)
-                              │
-                       TeamManager.run_stream()
-                              │
-               ┌──────────────┼──────────────┬─────────────┐
-               ▼              ▼              ▼             ▼
-          HALOWebSurfer    HALOCoder    HALOFileSurfer   McpAgent
-               │               │             │              │
-               └───────────────┴─────────────┴──────────────┘
-                              │
-                        ApprovalGuard ◀── input_func ◀── WebSocket
-                              │
-                  injection_gateway.py (Gap 2 — the "AI Firewall" above)
-              scan_and_gate() + action-hijack screening
-                   — every agent above routes through it
-                              │
-                       task_classifier.py (Gap 1 — Risk half of the Engine)
-                              │
-                     feedback_loop.py (Gap 3 — Trust half of the Engine)
-                     Bayesian trust, closed loop by default
-```
+![HALO code map](docs/code-map.svg)
 
 ---
 
